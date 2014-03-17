@@ -31,6 +31,8 @@ import (
 	"github.com/wsxiaoys/terminal/color"
 )
 
+const TokenHeader = "X-Paprika-Token"
+
 const (
 	OK   = "[ @{g}OK@{|} ]\n"
 	FAIL = "[ @{r}FAIL@{|} ]\n"
@@ -41,8 +43,10 @@ func call(method string, args interface{}, result *data.BuildResult) error {
 	verbose("@{c}>>>@{|} Initialising the Cider RPC client (using WebSocket) ... ")
 	client, err := rpc.NewService(func() (rpc.Transport, error) {
 		factory := ws.NewTransportFactory()
-		factory.Endpoint = master
-		factory.Token = token
+		factory.Server = master
+		factory.ConnConfigFunc = func(config *websocket.Config) {
+			config.Header.Set(TokenHeader, token)
+		}
 		return factory.NewTransport("paprika#" + mustRandomString())
 	})
 	if err != nil {

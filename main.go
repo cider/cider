@@ -111,7 +111,7 @@ func usage() {
   paprika - Paprika CI command line client
 
 USAGE
-  paprika [-verbose] [-repository REPO_URL] SCRIPT
+  paprika [-verbose] [-slave=SLAVE] [-repository REPO_URL] SCRIPT
 
 OPTIONS
 `)
@@ -137,6 +137,9 @@ DESCRIPTION
   Example:
     git+ssh://github.com/foobar/barfoo.git#develop would use Git over SSH to get
     the develop branch in the given repository.
+
+  SLAVE must be a string identifying one of the build slaves connected to the
+  relevant Paprika master node.
 
 ENVIRONMENT
   PAPRIKA_MASTER - Paprika CI master node network address
