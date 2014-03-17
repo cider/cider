@@ -39,9 +39,9 @@ however, we assume that all the parameters must be specified explicitly.
 
 ```bash
 $ paprika -verbose \
-          -slave=macosx109 \
-          -repository=git+https://github.com/salsita-cider/paprika \ 
-		  scripts/build.sh
+          -slave='macosx109' \
+          -repository='git+https://github.com/salsita-cider/paprika' \ 
+		  'scripts/build.sh'
 ```
 
 The output could then be
