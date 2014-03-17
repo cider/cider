@@ -35,7 +35,7 @@ $ paprika -verbose \
 		  scripts/build.sh
 ```
 
-The possible output would then be
+The output could then be
 
 ```bash
 TBD
