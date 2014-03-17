@@ -67,7 +67,7 @@ func call(method string, args interface{}, result *data.BuildResult) error {
 	call.Stderr = os.Stderr
 
 	// Execute the remote call.
-	verbose("@{c}>>>@{|} Calling ", method, " ...\n")
+	verbose("@{c}>>>@{|} Calling ", method, " ... ")
 	call.GoExecute()
 	verbose(OK)
 
