@@ -26,6 +26,7 @@ import (
 
 	"github.com/salsita-cider/paprika/data"
 
+	"code.google.com/p/go.net/websocket"
 	"github.com/cider/go-cider/cider/services/rpc"
 	ws "github.com/cider/go-cider/cider/transports/websocket/rpc"
 	"github.com/wsxiaoys/terminal/color"
