@@ -8,6 +8,9 @@ CI server. The whole process goes through the following steps:
 2. Using the required arguments, which is the repository URL and the path of the
    script to be run relative to the repository root, a Cider RPC call is issued
    to the master node, which is then forwarded to one of the build slaves.
+3. The build output is streamed from the build slave to the console.
+4. `paprika` terminates according to the build results. Failing build means a
+   non-zero exit status.
 
 ## Request Routing ##
 
