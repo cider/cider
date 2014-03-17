@@ -69,16 +69,19 @@ func call(method string, args interface{}, result *data.BuildResult) error {
 	// Execute the remote call.
 	verbose("@{c}>>>@{|} Calling ", method, " ...\n")
 	call.GoExecute()
+	verbose(OK)
 
 	// Wait for the remote call to be resolved.
 	verbose("@{c}>>>@{|} Combined output\n")
 	select {
 	case <-call.Resolved():
 	case <-signalCh:
-		color.Println("@{c}<<< @{r}Interrupting remote call ...")
+		color.Println("@{c}<<< @{r}Interrupting remote call ... ")
 		if err := call.Interrupt(); err != nil {
+			verbose(FAIL)
 			return err
 		}
+		verbose(OK)
 	}
 	verbose("@{c}<<<@{|} Combined output\n")
 	if err := call.Wait(); err != nil {
