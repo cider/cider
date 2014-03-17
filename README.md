@@ -26,6 +26,12 @@ labeled `macosx109` and it can run Bash scripts. The whole RPC method name is,
 however, just a useful convention to be able to use Cider routing out of the
 box.
 
+## Documentation ##
+
+```text
+TBD
+```
+
 ## Example ##
 
 `paprika` can parse environment variables when run on Circle CI. For now,
