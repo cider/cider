@@ -25,7 +25,21 @@ box.
 
 ## Example ##
 
+`paprika` can parse environment variables when run on Circle CI. For now,
+however, we assume that all the parameters must be specified explicitly.
+
+```bash
+$ paprika -verbose \
+          -slave=macosx109 \
+          -repository=git+https://github.com/salsita-cider/paprika \ 
+		  scripts/build.sh
+```
+
+The possible output would then be
+
+```bash
 TBD
+```
 
 ## License ##
 
