@@ -21,9 +21,8 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"net/url"
 	"os"
-	"path/filepath"
+	"strings"
 
 	"github.com/salsita-cider/paprika/data"
 
@@ -32,15 +31,36 @@ import (
 )
 
 var (
-	master = mustGetenv("PAPRIKA_MASTER")
-	token  = mustGetenv("PAPRIKA_TOKEN")
+	master string
+	token  string
 )
 
-var fverbose bool
+var (
+	fverbose bool
+	fenv     = Env(make([]string, 0))
+)
+
+type Env []string
+
+func (env *Env) Set(kv string) error {
+	parts := strings.SplitN(kv, "=", 2)
+	if len(parts) != 2 {
+		return fmt.Errorf("invalid key-value pair: %v", kv)
+	}
+
+	slice := (*[]string)(env)
+	*slice = append(*slice, kv)
+	return nil
+}
+
+func (env *Env) String() string {
+	return fmt.Sprintf("%v", *env)
+}
 
 func main() {
 	// Parse the command line.
 	flag.BoolVar(&fverbose, "verbose", fverbose, "print verbose output to stderr")
+	flag.Var(&fenv, "env", "set build environment variable")
 	slaveTag := flag.String("slave", "", "tag identifying the build slave to be used")
 	repositoryURL := flag.String("repository", "", "URL identifying the sources to be built")
 	flag.Parse()
@@ -51,13 +71,10 @@ func main() {
 
 	scriptRelativePath := flag.Arg(0)
 
-	// Disable Seelog logging output if verbose output is not requested.
-	// This is only necessary because go-cider logging is a mess right now.
-	if !fVerbose {
-		seelog.ReplaceLogger(seelog.Disabled)
-	}
+	// Parse the Paprika-specific environment variables.
+	master = mustGetenv("PAPRIKA_MASTER")
+	token = mustGetenv("PAPRIKA_TOKEN")
 
-	// Make sure the build slave tag is configured.
 	if *slaveTag == "" {
 		*slaveTag = os.Getenv("PAPRIKA_SLAVE")
 		if *slaveTag == "" {
@@ -68,14 +85,21 @@ func main() {
 
 	// Read information from the environment in case Circle CI is detected.
 	if os.Getenv("CIRCLECI") != "" {
-		*repo = fmt.Sprintf("git+ssh://git@github.com/%s/%s.git#%s",
+		*repositoryURL = fmt.Sprintf("git+ssh://git@github.com/%s/%s.git#%s",
 			os.Getenv("CIRCLE_PROJECT_USERNAME"),
 			os.Getenv("CIRCLE_PROJECT_REPONAME"),
 			os.Getenv("CIRCLE_BRANCH"))
 	}
 
+	// Disable Seelog logging output if verbose output is not requested.
+	// This is only necessary because go-cider logging is a mess right now.
+	if !fverbose {
+		seelog.ReplaceLogger(seelog.Disabled)
+	}
+
 	// Run the build.
-	if err := build(*slaveTag, *repositoryURL, scriptRelativePath); err != nil {
+	err := build(*slaveTag, *repositoryURL, scriptRelativePath, []string(fenv))
+	if err != nil {
 		color.Fprintf(os.Stderr, "\n@{r}Error: %v\n", err)
 		os.Exit(1)
 	}
@@ -83,9 +107,9 @@ func main() {
 	color.Fprintln(os.Stderr, "\n@{g}Success")
 }
 
-func build(slave string, repository string, script string) error {
+func build(slave, repository, script string, env []string) error {
 	// Parse the RPC arguments. This performs some early arguments validation.
-	method, args, err := data.ParseArgs(slave, repository, script)
+	method, args, err := data.ParseArgs(slave, repository, script, env)
 	if err != nil {
 		return err
 	}
@@ -97,13 +121,11 @@ func build(slave string, repository string, script string) error {
 		return err
 	}
 
-	// Process the result.
-	if err := result.Error(); err != nil {
-		return err
-	}
+	// Write the build summary into the console.
+	result.WriteSummary(os.Stderr)
 
-	result.Dump(os.Stdout)
-	return nil
+	// Return the build error, if any.
+	return result.Error
 }
 
 func usage() {
@@ -111,7 +133,11 @@ func usage() {
   paprika - Paprika CI command line client
 
 USAGE
-  paprika [-verbose] [-slave=SLAVE] [-repository REPO_URL] SCRIPT
+  paprika [-verbose]
+          [-slave SLAVE]
+          [-repository REPO_URL]
+          [-env KEY1=VALUE1 -env KEY2=VALUE2 ... ]
+          SCRIPT
 
 OPTIONS
 `)
@@ -124,7 +150,9 @@ DESCRIPTION
   The process exists with a non-zero exit status if the build fails.
 
   SCRIPT must be a relative path within the repository that denotes the build
-  scripts that will be run remotely on one of the connected build slaves.
+  script that will be run remotely on one of the connected build slaves.
+  The env flag can be used to specify additional environment variables that
+  are exported for the build script during the build.
 
   REPO_URL must be a valid URL with one of the following schemes that define
   what source code management system is to be used to get the project sources:

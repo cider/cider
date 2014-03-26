@@ -24,7 +24,7 @@ import (
 	"path/filepath"
 )
 
-func ParseArgs(slave, repository, script string) (method string, args interface{}, err error) {
+func ParseArgs(slave, repository, script string, env []string) (method string, args interface{}, err error) {
 	repoURL, err := url.Parse(repository)
 	if err != nil {
 		return
@@ -43,6 +43,7 @@ func ParseArgs(slave, repository, script string) (method string, args interface{
 	args = &Args{
 		Repository: (*RepositoryURL)(repoURL),
 		Script:     script,
+		Env:        env,
 	}
 
 	return
@@ -51,6 +52,7 @@ func ParseArgs(slave, repository, script string) (method string, args interface{
 type Args struct {
 	Repository *RepositoryURL `codec:"repository"`
 	Script     string         `codec:"script"`
+	Env        []string       `codec:"env"`
 }
 
 func (args *Args) Validate() error {

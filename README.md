@@ -41,7 +41,8 @@ however, we assume that all the parameters must be specified explicitly.
 $ paprika -verbose \
           -slave='macosx109' \
           -repository='git+https://github.com/salsita-cider/paprika' \ 
-		  'scripts/build.sh'
+		  -env FOO=bar -env ROOT=toor
+		  'scripts/upload.sh'
 ```
 
 The output could then be

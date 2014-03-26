@@ -21,8 +21,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"os"
-	"path/filepath"
-	"syscall"
+	"os/signal"
 
 	"github.com/salsita-cider/paprika/data"
 
@@ -45,7 +44,7 @@ func call(method string, args interface{}, result *data.BuildResult) error {
 	client, err := rpc.NewService(func() (rpc.Transport, error) {
 		factory := ws.NewTransportFactory()
 		factory.Server = master
-		factory.ConnConfigFunc = func(config *websocket.Config) {
+		factory.WSConfigFunc = func(config *websocket.Config) {
 			config.Header.Set(TokenHeader, token)
 		}
 		return factory.NewTransport("paprika#" + mustRandomString())
@@ -59,7 +58,7 @@ func call(method string, args interface{}, result *data.BuildResult) error {
 
 	// Start catching signals.
 	signalCh := make(chan os.Signal, 1)
-	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(signalCh, os.Interrupt)
 
 	// Configure the RPC call.
 	call := client.NewRemoteCall(method, args)
@@ -104,7 +103,7 @@ func mustRandomString() string {
 }
 
 func verbose(v ...interface{}) {
-	if fVerbose {
+	if fverbose {
 		color.Fprint(os.Stderr, v...)
 	}
 }
