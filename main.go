@@ -76,11 +76,7 @@ func main() {
 	token = mustGetenv("PAPRIKA_TOKEN")
 
 	if *slaveTag == "" {
-		*slaveTag = os.Getenv("PAPRIKA_SLAVE")
-		if *slaveTag == "" {
-			color.Fprintln(os.Stderr, "\n@{r}Error: Build slave not configured")
-			os.Exit(2)
-		}
+		*slaveTag = mustGetenv("PAPRIKA_SLAVE")
 	}
 
 	// Read information from the environment in case Circle CI is detected.
@@ -188,7 +184,8 @@ ENVIRONMENT
 func mustGetenv(key string) (value string) {
 	value = os.Getenv(key)
 	if value == "" {
-		panic(fmt.Errorf("Enviroment variable %s is not set", key))
+		color.Fprintf(os.Stderr, "\n@{r}Error: %v is not set\n", key)
+		os.Exit(2)
 	}
 	return
 }
