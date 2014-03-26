@@ -72,11 +72,11 @@ func main() {
 	scriptRelativePath := flag.Arg(0)
 
 	// Parse the Paprika-specific environment variables.
-	master = getenvOrExit("PAPRIKA_MASTER")
-	token = getenvOrExit("PAPRIKA_TOKEN")
+	master = getenvOrFailNow("PAPRIKA_MASTER")
+	token = getenvOrFailNow("PAPRIKA_TOKEN")
 
 	if *slaveTag == "" {
-		*slaveTag = getenvOrExit("PAPRIKA_SLAVE")
+		*slaveTag = getenvOrFailNow("PAPRIKA_SLAVE")
 	}
 
 	// Read information from the environment in case Circle CI is detected.
@@ -124,7 +124,7 @@ func build(slave, repository, script string, env []string) error {
 	return result.Error
 }
 
-func getenvOrExit(key string) (value string) {
+func getenvOrFailNow(key string) (value string) {
 	value = os.Getenv(key)
 	if value == "" {
 		color.Fprintf(os.Stderr, "\n@{r}Error: %v is not set\n", key)
