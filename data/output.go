@@ -24,8 +24,8 @@ import (
 )
 
 type BuildResult struct {
-	Duration time.Duration
-	Error    error
+	Duration time.Duration `codec:"duration"`
+	Error    error         `codec:"error"`
 }
 
 func (result BuildResult) WriteSummary(w io.Writer) {
