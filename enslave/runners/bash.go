@@ -15,22 +15,19 @@
 // You should have received a copy of the GNU General Public License
 // along with paprika.  If not, see <http://www.gnu.org/licenses/>.
 
-package data
+package runners
 
-import (
-	"fmt"
-	"io"
-	"time"
-)
+import "os/exec"
 
-type BuildResult struct {
-	Duration time.Duration `codec:"duration"`
-	Error    string        `codec:"error"`
-}
+func bashFactory() *Runner {
+	if exec.Command("bash", "--version").Run() != nil {
+		return nil
+	}
 
-func (result BuildResult) WriteSummary(w io.Writer) {
-	fmt.Fprintf(w, "=== BUILD SUMMARY ==========================================\n")
-	fmt.Fprintf(w, "Duration: %v\n", result.Duration)
-	fmt.Fprintf(w, "Error:    %v\n", result.Error)
-	fmt.Fprintf(w, "============================================================\n")
+	return &Runner{
+		Name: "bash",
+		NewCommand: func(script string) *exec.Cmd {
+			return exec.Command("bash", script)
+		},
+	}
 }

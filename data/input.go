@@ -21,27 +21,15 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
-	"path/filepath"
 )
 
-func ParseArgs(slave, repository, script string, env []string) (method string, args interface{}, err error) {
-	repoURL, err := url.Parse(repository)
-	if err != nil {
-		return
-	}
-
-	scriptExt := filepath.Ext(script)
-	if scriptExt == "" {
-		err = fmt.Errorf("the build script must have some file extension: %s", script)
-		return
-	}
-
+func ParseArgs(slave, repository, script, runner string, env []string) (method string, args interface{}, err error) {
 	// RPC method name
-	method = slave + "." + scriptExt
+	method = slave + "." + runner
 
 	// RPC arguments
-	args = &Args{
-		Repository: (*RepositoryURL)(repoURL),
+	args = &BuildArgs{
+		Repository: repository,
 		Script:     script,
 		Env:        env,
 	}
@@ -49,34 +37,32 @@ func ParseArgs(slave, repository, script string, env []string) (method string, a
 	return
 }
 
-type Args struct {
-	Repository *RepositoryURL `codec:"repository"`
-	Script     string         `codec:"script"`
-	Env        []string       `codec:"env"`
+type BuildArgs struct {
+	Repository string   `codec:"repository"`
+	Script     string   `codec:"script"`
+	Env        []string `codec:"env"`
 }
 
-func (args *Args) Validate() error {
-	if args.Repository == nil {
-		return errors.New("Args.Validate: repository not set")
+func (args *BuildArgs) Validate() error {
+	switch {
+	case args.Repository == "":
+		return errors.New("BuildArgs.Validate: Repository is not set")
+	case args.Script == "":
+		return errors.New("BuildArgs.Validate: Script is not set")
 	}
-	if err := args.Repository.Validate(); err != nil {
-		return fmt.Errorf("Args.Validate: %v", err)
-	}
-	if args.Script == "" {
-		return errors.New("Args.Validate: script not set")
-	}
-	return nil
-}
 
-type RepositoryURL url.URL
+	repoURL, err := url.Parse(args.Repository)
+	if err != nil {
+		return fmt.Errorf("BuildArgs.Validate: %v", err)
+	}
 
-func (u *RepositoryURL) Validate() error {
-	repoURL := (*url.URL)(u)
 	switch repoURL.Scheme {
 	case "git+https":
 	case "git+ssh":
 	default:
-		return fmt.Errorf("unsupported repository URL scheme: %v", repoURL.Scheme)
+		return fmt.Errorf("BuildArgs.Validate: unsupported repository URL scheme: %v",
+			repoURL.Scheme)
 	}
+
 	return nil
 }
