@@ -28,6 +28,7 @@ const version = "0.0.1"
 
 func main() {
 	paprika := gocli.NewApp("paprika")
+	paprika.UsageLine = "paprika SUBCMD "
 	paprika.Short = "your CI server extender"
 	paprika.Version = version
 	paprika.Long = `
@@ -44,8 +45,7 @@ func main() {
   can be used whenever possible, and Paprika can be invoked when one of the
   unsupported platforms is required to build the project.
 
-  To understand more about how Paprika works, check the available subcommands.
-	`
+  To understand more about how Paprika works, check the available subcommands.`
 
 	paprika.MustRegisterSubcommand(build.Command)
 	paprika.MustRegisterSubcommand(enslave.Command)

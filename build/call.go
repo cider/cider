@@ -15,19 +15,24 @@
 // You should have received a copy of the GNU General Public License
 // along with paprika.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package build
 
 import (
+	// Stdlib
 	"crypto/rand"
 	"encoding/base64"
 	"os"
 	"os/signal"
 
-	"github.com/salsita-cider/paprika/data"
+	// Paprika
+	"github.com/paprikaci/paprika/data"
 
-	"code.google.com/p/go.net/websocket"
+	// Cider
 	"github.com/cider/go-cider/cider/services/rpc"
 	ws "github.com/cider/go-cider/cider/transports/websocket/rpc"
+
+	// Others
+	"code.google.com/p/go.net/websocket"
 	"github.com/wsxiaoys/terminal/color"
 )
 
@@ -103,7 +108,7 @@ func mustRandomString() string {
 }
 
 func verbose(v ...interface{}) {
-	if fverbose {
+	if verboseMode {
 		color.Fprint(os.Stderr, v...)
 	}
 }

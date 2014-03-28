@@ -18,10 +18,14 @@
 package enslave
 
 import (
-	"log"
+	// Stdlib
 	"os"
 	"runtime"
 
+	// Paprika
+	"github.com/paprikaci/paprika/utils"
+
+	// Others
 	"github.com/tchap/gocli"
 )
 
@@ -63,35 +67,12 @@ func enslaveThisPoorMachine(cmd *gocli.Command, args []string) {
 	}
 
 	// Read the environment to fill in missing parameters.
-	getenvOrFailNow(&master, "PAPRIKA_MASTER", cmd)
-	getenvOrFailNow(&token, "PAPRIKA_TOKEN", cmd)
-	getenvOrFailNow(&identity, "PAPRIKA_IDENTITY", cmd)
-	getenv(&labels, "PAPRIKA_LABELS")
-	getenvOrFailNow(&workspace, "PAPRIKA_WORKSPACE", cmd)
+	utils.GetenvOrFailNow(&master, "PAPRIKA_MASTER", cmd)
+	utils.GetenvOrFailNow(&token, "PAPRIKA_TOKEN", cmd)
+	utils.GetenvOrFailNow(&identity, "PAPRIKA_IDENTITY", cmd)
+	utils.Getenv(&labels, "PAPRIKA_LABELS")
+	utils.GetenvOrFailNow(&workspace, "PAPRIKA_WORKSPACE", cmd)
 
 	// Run the main function.
 	enslave()
-}
-
-func getenv(value *string, key string) {
-	if *value != "" {
-		*value = os.Getenv(key)
-	}
-}
-
-func getenvOrFailNow(value *string, key string, cmd *gocli.Command) {
-	// In case the flag was used, we do not read the environment.
-	if *value != "" {
-		return
-	}
-
-	// Read the value from the environment or exit.
-	v := os.Getenv(key)
-	if v == "" {
-		log.Printf("Error: %v is not set and neither is the associated flag\n\n", key)
-		cmd.Usage()
-		os.Exit(2)
-	}
-
-	*value = v
 }
