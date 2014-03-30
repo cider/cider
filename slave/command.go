@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with paprika.  If not, see <http://www.gnu.org/licenses/>.
 
-package enslave
+package slave
 
 import (
 	// Stdlib

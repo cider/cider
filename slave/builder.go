@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with paprika.  If not, see <http://www.gnu.org/licenses/>.
 
-package enslave
+package slave
 
 import (
 	// Stdlib
@@ -26,7 +26,7 @@ import (
 
 	// Paprika
 	"github.com/paprikaci/paprika/data"
-	"github.com/paprikaci/paprika/enslave/runners"
+	"github.com/paprikaci/paprika/slave/runners"
 
 	// Cider
 	"github.com/cider/cider/apps/utils/executil"

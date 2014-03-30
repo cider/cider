@@ -18,10 +18,13 @@
 package main
 
 import (
-	"github.com/paprikaci/paprika/build"
-	"github.com/paprikaci/paprika/enslave"
-	"github.com/tchap/gocli"
 	"os"
+
+	"github.com/paprikaci/paprika/build"
+	"github.com/paprikaci/paprika/master"
+	"github.com/paprikaci/paprika/slave"
+
+	"github.com/tchap/gocli"
 )
 
 const version = "0.0.1"
@@ -48,7 +51,8 @@ func main() {
   To understand more about how Paprika works, check the available subcommands.`
 
 	paprika.MustRegisterSubcommand(build.Command)
-	paprika.MustRegisterSubcommand(enslave.Command)
+	paprika.MustRegisterSubcommand(master.Command)
+	paprika.MustRegisterSubcommand(slave.Command)
 
 	paprika.Run(os.Args[1:])
 }
