@@ -1,4 +1,4 @@
-// Copyright (c) 2014 Salsita s.r.o.
+// Copyright (c) 2014 The AUTHORS
 //
 // This file is part of paprika.
 //
@@ -35,6 +35,7 @@ import (
 
 	// Others
 	"code.google.com/p/go.net/websocket"
+	"github.com/cihub/seelog"
 )
 
 const TokenHeader = "X-Paprika-Token"
@@ -42,6 +43,10 @@ const TokenHeader = "X-Paprika-Token"
 func enslave() {
 	var exitCode int
 	log.SetFlags(0)
+
+	// This must be here as long as go-cider logging is retarded.
+	seelog.ReplaceLogger(seelog.Default)
+	//seelog.ReplaceLogger(seelog.Disabled)
 
 	// Start catching signals.
 	signalCh := make(chan os.Signal, 1)
@@ -52,6 +57,7 @@ func enslave() {
 	srv, err := rpc.NewService(func() (rpc.Transport, error) {
 		factory := ws.NewTransportFactory()
 		factory.Server = master
+		factory.Origin = "http://localhost"
 		factory.WSConfigFunc = func(config *websocket.Config) {
 			config.Header.Set(TokenHeader, token)
 		}
@@ -66,16 +72,22 @@ func enslave() {
 	// sends some data to the channel, and when it is finished, it reads data
 	// from the same channel.
 	execQueue := make(chan bool, executors)
+	log.Printf("Allowing up to %v parallel builds.\n", executors)
 
 	// Export all available runners.
-	fmt.Println("Available runners:")
+	fmt.Println("\nAvailable runners:")
 	for _, runner := range runners.Available {
 		log.Printf("  %v\n", runner.Name)
 	}
 
 	manager := newWorkspaceManager(workspace)
 
-	for _, label := range append(strings.Split(labels, ","), "any") {
+	ls := []string{"any"}
+	if labels != "" {
+		ls = append(ls, strings.Split(labels, ",")...)
+	}
+
+	for _, label := range ls {
 		for _, runner := range runners.Available {
 			methodName := label + "." + runner.Name
 			builder := &Builder{runner, manager, execQueue}
@@ -87,11 +99,14 @@ func enslave() {
 		}
 	}
 
+	log.Printf("\nConnected to %v\n", master)
+
 	// Block until either there is a fatal error or a signal is received.
 	select {
 	case <-srv.Closed():
 		goto Wait
 	case <-signalCh:
+		log.Println("Signal received, exiting...")
 		goto Close
 	}
 

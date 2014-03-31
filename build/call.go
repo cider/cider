@@ -45,10 +45,11 @@ const (
 
 func call(method string, args interface{}, result *data.BuildResult) error {
 	// Create a Cider RPC client that uses WebSocket transport.
-	verbose("@{c}>>>@{|} Initialising the Cider RPC client (using WebSocket) ... ")
+	verbose("@{c}>>>@{|} Initialising the RPC client (using WebSocket) ... ")
 	client, err := rpc.NewService(func() (rpc.Transport, error) {
 		factory := ws.NewTransportFactory()
 		factory.Server = master
+		factory.Origin = "http://localhost"
 		factory.WSConfigFunc = func(config *websocket.Config) {
 			config.Header.Set(TokenHeader, token)
 		}
@@ -80,12 +81,10 @@ func call(method string, args interface{}, result *data.BuildResult) error {
 	select {
 	case <-call.Resolved():
 	case <-signalCh:
-		color.Println("@{c}<<< @{r}Interrupting remote call ... ")
+		color.Println("@{r}---> Interrupting the build job")
 		if err := call.Interrupt(); err != nil {
-			verbose(FAIL)
 			return err
 		}
-		verbose(OK)
 	}
 	verbose("@{c}<<<@{|} Combined output\n")
 	if err := call.Wait(); err != nil {

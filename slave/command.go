@@ -40,8 +40,8 @@ var (
 
 var Command = &gocli.Command{
 	UsageLine: `
-  enslave [-master=URL] [-token=TOKEN] [-identity=IDENTITY] [-labels=LABELS]
-          [-workspace=WORKSPACE] [-executors=EXECUTORS]`,
+  slave [-master=URL] [-token=TOKEN] [-identity=IDENTITY] [-labels=LABELS]
+        [-workspace=WORKSPACE] [-executors=EXECUTORS]`,
 	Short: "run a build slave",
 	Long: `
   Start a build slave and connect it to the specified master node.

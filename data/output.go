@@ -29,8 +29,5 @@ type BuildResult struct {
 }
 
 func (result BuildResult) WriteSummary(w io.Writer) {
-	fmt.Fprintf(w, "=== BUILD SUMMARY ==========================================\n")
 	fmt.Fprintf(w, "Duration: %v\n", result.Duration)
-	fmt.Fprintf(w, "Error:    %v\n", result.Error)
-	fmt.Fprintf(w, "============================================================\n")
 }

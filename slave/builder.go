@@ -1,4 +1,4 @@
-// Copyright (c) 2014 Salsita s.r.o.
+// Copyright (c) 2014 The AUTHORS
 //
 // This file is part of paprika.
 //
@@ -66,18 +66,26 @@ func (builder *Builder) Build(request rpc.RemoteRequest) {
 
 	// Acquire the workspace lock.
 	wsQueue := builder.manager.GetWorkspaceQueue(workspace)
-	if errStr := acquire("the workspace lock", wsQueue, request); errStr != "" {
+	errStr := acquire("Locking the project workspace", wsQueue, request)
+	if errStr != "" {
 		request.Resolve(5, &data.BuildResult{Error: errStr})
 		return
 	}
-	defer release("the workspace lock", wsQueue, request)
+	defer func(){
+		// Release the workspace lock.
+		<-wsQueue
+	}()
 
 	// Acquire a build executor.
-	if errStr := acquire("a build executor", builder.execQueue, request); errStr != "" {
+	errStr = acquire("Waiting for a free executor", builder.execQueue, request)
+	if errStr != "" {
 		request.Resolve(5, &data.BuildResult{Error: errStr})
 		return
 	}
-	defer release("the build executor", builder.execQueue, request)
+	defer func(){
+		// Free the allocated executor.
+		<-builder.execQueue
+	}()
 
 	// Start measuring the build time.
 	startTimestamp := time.Now()
@@ -96,6 +104,7 @@ func (builder *Builder) Build(request rpc.RemoteRequest) {
 		return
 	}
 
+	fmt.Fprintln(stdout, "---> Pulling the sources")
 	if srcDirExists {
 		err = vcs.Pull(repoURL, srcDir, request)
 	} else {
@@ -118,9 +127,9 @@ func (builder *Builder) Build(request rpc.RemoteRequest) {
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
 
-	fmt.Fprintf(stdout, "+---> Running the script: %v\n", args.Script)
+	fmt.Fprintf(stdout, "---> Running the script: %v\n", args.Script)
 	err = executil.Run(cmd, request.Interrupted())
-	fmt.Fprintln(stdout, "+---> Build finished")
+	fmt.Fprintln(stdout, "---> Build finished")
 	if err != nil {
 		resolve(request, 1, startTimestamp, err)
 		return
@@ -130,26 +139,19 @@ func (builder *Builder) Build(request rpc.RemoteRequest) {
 	resolve(request, 0, startTimestamp, nil)
 }
 
-func acquire(what string, queue chan bool, request rpc.RemoteRequest) (err string) {
+func acquire(msg string, queue chan bool, request rpc.RemoteRequest) (err string) {
 	stdout := request.Stdout()
-	fmt.Fprintf(stdout, "+---> Trying to acquire %v\n", what)
+	fmt.Fprintf(stdout, "---> %v\n", msg)
 	for {
 		select {
 		case queue <- true:
-			fmt.Fprintln(stdout, "+---> Success")
 			return
 		case <-request.Interrupted():
-			fmt.Fprintln(stdout, "+---> Failure - build interrupted")
 			return "interrupted"
 		case <-time.After(30 * time.Second):
-			fmt.Fprintln(stdout, "|")
+			fmt.Fprintln(stdout, "---> ...")
 		}
 	}
-}
-
-func release(what string, queue chan bool, request rpc.RemoteRequest) {
-	<-queue
-	fmt.Fprintf(request.Stdout(), "+---> Releasing %v\n", what)
 }
 
 func resolve(req rpc.RemoteRequest, retCode rpc.ReturnCode, start time.Time, err error) {

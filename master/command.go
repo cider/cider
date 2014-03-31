@@ -27,8 +27,12 @@ import (
 	// Paprika
 	"github.com/paprikaci/paprika/utils"
 
+	// Cider
+	clog "github.com/cider/cider/broker/log"
+
 	// Others
 	"github.com/tchap/gocli"
+	"github.com/cihub/seelog"
 )
 
 var (
@@ -45,8 +49,8 @@ var Command = &gocli.Command{
   otherwise the connection is refused.
 
 ENVIRONMENT:
-  PAPRIKA_ADDRESS - can be used instead of -listen
-  PAPRIKA_TOKEN   - can be used instead of -token
+  PAPRIKA_LISTEN - can be used instead of -listen
+  PAPRIKA_TOKEN  - can be used instead of -token
 	`,
 	Action: run,
 }
@@ -57,7 +61,9 @@ func init() {
 }
 
 func run(cmd *gocli.Command, args []string) {
+	// Set up logging.
 	log.SetFlags(0)
+	clog.UseLogger(seelog.Default)
 
 	// Make sure there were no arguments specified.
 	if len(args) != 0 {
@@ -66,7 +72,7 @@ func run(cmd *gocli.Command, args []string) {
 	}
 
 	// Read the environment to fill in the missing parameters.
-	utils.GetenvOrFailNow(&listen, "PAPRIKA_ADDRESS", cmd)
+	utils.GetenvOrFailNow(&listen, "PAPRIKA_LISTEN", cmd)
 	utils.GetenvOrFailNow(&token, "PAPRIKA_TOKEN", cmd)
 
 	// Start catching signals.

@@ -23,9 +23,9 @@ import (
 	"net/url"
 )
 
-func ParseArgs(slave, repository, script, runner string, env []string) (method string, args interface{}, err error) {
+func ParseArgs(label, runner, repository, script string, env []string) (method string, args interface{}, err error) {
 	// RPC method name
-	method = slave + "." + runner
+	method = label + "." + runner
 
 	// RPC arguments
 	args = &BuildArgs{

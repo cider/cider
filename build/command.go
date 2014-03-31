@@ -20,13 +20,16 @@ package build
 import (
 	// Stdlib
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
 	// Paprika
+	"github.com/paprikaci/paprika/data"
 	"github.com/paprikaci/paprika/utils"
 
 	// Others
+	"github.com/cihub/seelog"
 	"github.com/tchap/gocli"
 )
 
@@ -73,7 +76,7 @@ var Command = &gocli.Command{
 
   Example:
     $ paprika build -master wss://paprika.example.com/build -token=12345
-	                -label macosx -runner bash
+	            -label macosx -runner bash
                     -repository git+ssh://github.com/foo/bar.git#develop
                     -script scripts/build -env ENVIRONMENT=testing -env DEBUG=y
 
@@ -102,9 +105,9 @@ func init() {
 	cmd.Flags.Var(&env, "env", "define an environment variable for the build run")
 }
 
-func triggerBuild(cmd *gocli.Command, args []string) {
+func triggerBuild(cmd *gocli.Command, argv []string) {
 	// Make sure there were no arguments specified.
-	if len(args) != 0 {
+	if len(argv) != 0 {
 		cmd.Usage()
 		os.Exit(2)
 	}
@@ -125,6 +128,30 @@ func triggerBuild(cmd *gocli.Command, args []string) {
 			os.Getenv("CIRCLE_BRANCH"))
 	}
 
-	// Run the main function.
-	build()
+	// Disable all the log prefixes and what not.
+	log.SetFlags(0)
+
+	// This must be here as long as go-cider logging is retarded as it is now.
+	seelog.ReplaceLogger(seelog.Disabled)
+
+	// Parse the RPC arguments. This performs some early arguments validation.
+	method, args, err := data.ParseArgs(label, runner, repository, script, env)
+	if err != nil {
+		log.Fatalf("\nError: %v\n", err)
+	}
+
+	// Since we managed to parse and verify the arguments, we can happily start
+	// building the project and streaming the output.
+	var result data.BuildResult
+	if err := call(method, args, &result); err != nil {
+		log.Fatalf("\nError: %v\n", err)
+	}
+
+	// Write the build summary into the console.
+	result.WriteSummary(os.Stderr)
+
+	// Check for the build error.
+	if result.Error != "" {
+		log.Fatalf("\nError: %v\n", result.Error)
+	}
 }
