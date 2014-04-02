@@ -24,7 +24,7 @@ import (
 )
 
 func Getenv(value *string, key string) {
-	if *value != "" {
+	if *value == "" {
 		*value = os.Getenv(key)
 	}
 }

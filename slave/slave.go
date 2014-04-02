@@ -41,19 +41,15 @@ import (
 const TokenHeader = "X-Paprika-Token"
 
 func enslave() {
-	var exitCode int
 	log.SetFlags(0)
 
 	// This must be here as long as go-cider logging is retarded.
 	seelog.ReplaceLogger(seelog.Default)
 	//seelog.ReplaceLogger(seelog.Disabled)
 
-	// Start catching signals.
-	signalCh := make(chan os.Signal, 1)
-	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)
-
 	// Connect to the master node using the WebSocket transport.
 	// The specified token is used to authenticated the build slave.
+	log.Printf("---> Connecting to %v\n", master)
 	srv, err := rpc.NewService(func() (rpc.Transport, error) {
 		factory := ws.NewTransportFactory()
 		factory.Server = master
@@ -67,17 +63,21 @@ func enslave() {
 		log.Fatal(err)
 	}
 
+	// Start catching signals.
+	signalCh := make(chan os.Signal, 1)
+	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)
+
 	// Number of concurrent builds is limited by creating a channel of the
 	// specified length. Every time a build is requested, the request handler
 	// sends some data to the channel, and when it is finished, it reads data
 	// from the same channel.
 	execQueue := make(chan bool, executors)
-	log.Printf("Allowing up to %v parallel builds.\n", executors)
+	log.Printf("---> Initiating %v build executor(s)\n", executors)
 
-	// Export all available runners.
-	fmt.Println("\nAvailable runners:")
+	// Export all available labels and runners.
+	fmt.Println("---> Available runners:")
 	for _, runner := range runners.Available {
-		log.Printf("  %v\n", runner.Name)
+		log.Printf("       %v\n", runner.Name)
 	}
 
 	manager := newWorkspaceManager(workspace)
@@ -87,6 +87,7 @@ func enslave() {
 		ls = append(ls, strings.Split(labels, ",")...)
 	}
 
+	var exitCode int
 	for _, label := range ls {
 		for _, runner := range runners.Available {
 			methodName := label + "." + runner.Name
@@ -98,8 +99,6 @@ func enslave() {
 			}
 		}
 	}
-
-	log.Printf("\nConnected to %v\n", master)
 
 	// Block until either there is a fatal error or a signal is received.
 	select {
