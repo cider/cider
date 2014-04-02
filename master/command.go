@@ -23,6 +23,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	// Paprika
 	"github.com/paprikaci/paprika/utils"
@@ -31,22 +32,28 @@ import (
 	clog "github.com/cider/cider/broker/log"
 
 	// Others
-	"github.com/tchap/gocli"
 	"github.com/cihub/seelog"
+	"github.com/tchap/gocli"
 )
 
 var (
-	listen string
-	token  string
+	listen    string
+	token     string
+	heartbeat time.Duration
 )
 
 var Command = &gocli.Command{
-	UsageLine: "master [-listen=ADDRESS] [-token=TOKEN]",
-	Short:     "start a build master node",
+	UsageLine: `master [-listen=ADDRESS] [-token=TOKEN]
+	                   [-heartbeat=HEARTBEAT]`,
+	Short: "start a build master node",
 	Long: `
-  Start a build master node and start listening on ADDR for build slave
+  Start a build master node and start listening on ADDRESS for build slave
   connections. Every build slave must pass TOKEN in the connection request,
   otherwise the connection is refused.
+
+  If HEARTBEAT is specified, the build master sends a ping message to every
+  build slave every HEARTBEAT and closes the connection if the slave is not
+  responding.
 
 ENVIRONMENT:
   PAPRIKA_LISTEN - can be used instead of -listen
@@ -58,6 +65,7 @@ ENVIRONMENT:
 func init() {
 	Command.Flags.StringVar(&listen, "listen", listen, "network address to listen on")
 	Command.Flags.StringVar(&token, "token", token, "build master access token")
+	Command.Flags.DurationVar(&heartbeat, "heartbeat", heartbeat, "heartbeat period")
 }
 
 func run(cmd *gocli.Command, args []string) {
@@ -80,7 +88,7 @@ func run(cmd *gocli.Command, args []string) {
 	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)
 
 	// Start listening for slave connections.
-	m := New(listen, token).Listen()
+	m := New(listen, token).EnableHeartbeat(heartbeat).Listen()
 	log.Printf("Paprika broker listening on %v\n", listen)
 
 	select {

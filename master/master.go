@@ -21,6 +21,7 @@ import (
 	// Stdlib
 	"errors"
 	"net/http"
+	"time"
 
 	// Cider
 	"github.com/cider/cider/broker"
@@ -38,11 +39,12 @@ var ErrInvalidToken = errors.New("Invalid access token")
 // BuildMaster represents a Paprika CI master node that serves as the hub where
 // all the build slaves and build clients exchange data between each other.
 type BuildMaster struct {
-	address string
-	token   string
-	broker  *broker.Broker
-	termCh  chan struct{}
-	err     error
+	address   string
+	token     string
+	heartbeat time.Duration
+	broker    *broker.Broker
+	termCh    chan struct{}
+	err       error
 }
 
 // NewBuildMaster is the BuildMaster constructor function, surprisingly.
@@ -53,6 +55,12 @@ func New(address, token string) *BuildMaster {
 		broker:  broker.New(),
 		termCh:  make(chan struct{}),
 	}
+}
+
+// EnableHeartbeat enables heartbeat using the specified period.
+func (m *BuildMaster) EnableHeartbeat(period time.Duration) *BuildMaster {
+	m.heartbeat = period
+	return m
 }
 
 // Listen makes the build master listen and start accepting connections
@@ -78,6 +86,7 @@ func (m *BuildMaster) Listen() *BuildMaster {
 				}
 				return nil
 			},
+			HeartbeatPeriod: m.heartbeat,
 		}
 
 		return factory.NewEndpoint(balancer), nil
