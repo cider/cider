@@ -21,6 +21,7 @@ import (
 	// Stdlib
 	"crypto/rand"
 	"encoding/base64"
+	"fmt"
 	"os"
 	"os/signal"
 
@@ -38,14 +39,9 @@ import (
 
 const TokenHeader = "X-Paprika-Token"
 
-const (
-	OK   = "[ @{g}OK@{|} ]\n"
-	FAIL = "[ @{r}FAIL@{|} ]\n"
-)
-
 func call(method string, args interface{}, result *data.BuildResult) error {
 	// Create a Cider RPC client that uses WebSocket transport.
-	verbose("@{c}>>>@{|} Initialising the RPC client (using WebSocket) ... ")
+	fmt.Printf("---> Connecting to %v\n", master)
 	client, err := rpc.NewService(func() (rpc.Transport, error) {
 		factory := ws.NewTransportFactory()
 		factory.Server = master
@@ -56,10 +52,8 @@ func call(method string, args interface{}, result *data.BuildResult) error {
 		return factory.NewTransport("paprika#" + mustRandomString())
 	})
 	if err != nil {
-		verbose(FAIL)
 		return err
 	}
-	verbose(OK)
 	defer client.Close()
 
 	// Start catching signals.
@@ -74,7 +68,6 @@ func call(method string, args interface{}, result *data.BuildResult) error {
 	// Execute the remote call.
 	verbose("@{c}>>>@{|} Calling ", method, " ... ")
 	call.GoExecute()
-	verbose(OK)
 
 	// Wait for the remote call to be resolved.
 	verbose("@{c}>>>@{|} Combined output\n")
