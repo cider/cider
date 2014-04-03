@@ -127,7 +127,8 @@ func (builder *Builder) Build(request rpc.RemoteRequest) {
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
 
-	fmt.Fprintf(stdout, "---> Running the script: %v\n", args.Script)
+	fmt.Fprintf(stdout, "---> Running the script located at %v (using %v)\n",
+		args.Script, builder.runner.Name)
 	err = executil.Run(cmd, request.Interrupted())
 	fmt.Fprintln(stdout, "---> Build finished")
 	if err != nil {
