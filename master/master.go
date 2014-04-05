@@ -32,7 +32,7 @@ import (
 	"code.google.com/p/go.net/websocket"
 )
 
-const TokenHeader = "X-Paprika-Token"
+const TokenHeader = "X-Cider-Token"
 
 var ErrInvalidToken = errors.New("Invalid access token")
 

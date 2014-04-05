@@ -38,7 +38,7 @@ import (
 	"github.com/cihub/seelog"
 )
 
-const TokenHeader = "X-Paprika-Token"
+const TokenHeader = "X-Cider-Token"
 
 func enslave() {
 	log.SetFlags(0)
