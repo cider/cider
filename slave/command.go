@@ -68,7 +68,7 @@ func enslaveThisPoorMachine(cmd *gocli.Command, args []string) {
 
 	// Read the environment to fill in missing parameters.
 	utils.GetenvOrFailNow(&master, "PAPRIKA_MASTER", cmd)
-	utils.GetenvOrFailNow(&token, "PAPRIKA_TOKEN", cmd)
+	utils.GetenvOrFailNow(&token, "PAPRIKA_MASTER_TOKEN", cmd)
 	utils.GetenvOrFailNow(&identity, "PAPRIKA_IDENTITY", cmd)
 	utils.Getenv(&labels, "PAPRIKA_LABELS")
 	utils.GetenvOrFailNow(&workspace, "PAPRIKA_WORKSPACE", cmd)

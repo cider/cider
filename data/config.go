@@ -25,6 +25,35 @@ import (
 	yaml "launchpad.net/goyaml"
 )
 
+type Env []string
+
+func (env *Env) Set(kv string) error {
+	// Parse the key-value pair.
+	parts := strings.SplitN(kv, "=", 2)
+	if len(parts) != 2 {
+		return fmt.Errorf("invalid key-value pair: %v", kv)
+	}
+
+	slice := (*[]string)(env)
+
+	// Delete the existing value, if present.
+	for i, kw := range *slice {
+		ps := strings.SplitN(kw, "=", 2)
+		if ps[0] == parts[0] {
+			*slice = append((*slice)[:i], (*slice)[i+i:]...)
+			break
+		}
+	}
+
+	// Append the new value.
+	*slice = append(*slice, kv)
+	return nil
+}
+
+func (env *Env) String() string {
+	return fmt.Sprintf("%v", *env)
+}
+
 type Config struct {
 	Master struct {
 		URL   string `yaml:"url"`
@@ -37,14 +66,16 @@ type Config struct {
 		URL string `yaml:"url"`
 	} `yaml:"repository"`
 	Script struct {
-		Path   string   `yaml:"path"`
-		Runner string   `yaml:"runner"`
-		Env    []string `yaml:"env"`
+		Path   string `yaml:"path"`
+		Runner string `yaml:"runner"`
+		Env    Env    `yaml:"env"`
 	} `yaml:"script"`
 }
 
 func NewConfig() *Config {
-	return new(Config)
+	var config Config
+	config.Script.Env = make([]string, 0)
+	return &config
 }
 
 func ParseConfig(data []byte) (*Config, error) {
@@ -90,7 +121,7 @@ ReadEnv:
 	for _, kv := range os.Environ() {
 		// Pick the ones that start with the right prefix.
 		if strings.HasPrefix(kv, pre) {
-			parts := strings.SplitN(kv, "=", 1)
+			parts := strings.SplitN(kv, "=", 2)
 			// Just ignore the malformed key-value pairs.
 			if len(parts) != 2 {
 				continue ReadEnv

@@ -74,6 +74,8 @@ func call(master, token, method string, args interface{}, result *data.BuildResu
 	}
 	defer client.Close()
 
+	fmt.Printf("---> Sending the build request (using method %q)\n", method)
+
 	// Start catching signals.
 	signalCh := make(chan os.Signal, 1)
 	signal.Notify(signalCh, os.Interrupt)

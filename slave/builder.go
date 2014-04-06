@@ -71,7 +71,7 @@ func (builder *Builder) Build(request rpc.RemoteRequest) {
 		request.Resolve(5, &data.BuildResult{Error: errStr})
 		return
 	}
-	defer func(){
+	defer func() {
 		// Release the workspace lock.
 		<-wsQueue
 	}()
@@ -82,7 +82,7 @@ func (builder *Builder) Build(request rpc.RemoteRequest) {
 		request.Resolve(5, &data.BuildResult{Error: errStr})
 		return
 	}
-	defer func(){
+	defer func() {
 		// Free the allocated executor.
 		<-builder.execQueue
 	}()
@@ -127,7 +127,7 @@ func (builder *Builder) Build(request rpc.RemoteRequest) {
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
 
-	fmt.Fprintf(stdout, "---> Running the script located at %v (using %v)\n",
+	fmt.Fprintf(stdout, "---> Running the script located at %v (using runner %q)\n",
 		args.Script, builder.runner.Name)
 	err = executil.Run(cmd, request.Interrupted())
 	fmt.Fprintln(stdout, "---> Build finished")

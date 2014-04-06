@@ -19,11 +19,9 @@ package build
 
 import (
 	// Stdlib
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
-	"strings"
 
 	// Paprika
 	"github.com/paprikaci/paprika/data"
@@ -43,27 +41,10 @@ var (
 	repository  string
 	script      string
 	runner      string
-	env         = Env(make([]string, 0))
+	env         = data.Env(make([]string, 0))
 )
 
 var config = data.NewConfig()
-
-type Env []string
-
-func (env *Env) Set(kv string) error {
-	parts := strings.SplitN(kv, "=", 2)
-	if len(parts) != 2 {
-		return fmt.Errorf("invalid key-value pair: %v", kv)
-	}
-
-	slice := (*[]string)(env)
-	*slice = append(*slice, kv)
-	return nil
-}
-
-func (env *Env) String() string {
-	return fmt.Sprintf("%v", *env)
-}
 
 var Command = &gocli.Command{
 	UsageLine: `
@@ -108,7 +89,7 @@ func init() {
 	cmd.Flags.StringVar(&runner, "runner", runner, "script runner")
 	cmd.Flags.StringVar(&repository, "repository", repository, "project repository URL")
 	cmd.Flags.StringVar(&script, "script", script, "relative path to the script to run")
-	cmd.Flags.Var((*Env)(&config.Script.Env), "env", "define an environment variable for the build run")
+	cmd.Flags.Var(&env, "env", "define an environment variable for the build run")
 }
 
 func triggerBuild(cmd *gocli.Command, argv []string) {
@@ -160,6 +141,10 @@ func triggerBuild(cmd *gocli.Command, argv []string) {
 	}
 	if runner != "" {
 		config.Script.Runner = runner
+	}
+
+	for _, kv := range []string(env) {
+		config.Script.Env.Set(kv)
 	}
 
 	// Parse the RPC arguments. This performs some early arguments validation.

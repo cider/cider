@@ -90,7 +90,7 @@ func enslave() {
 	var exitCode int
 	for _, label := range ls {
 		for _, runner := range runners.Available {
-			methodName := label + "." + runner.Name
+			methodName := fmt.Sprintf("paprika.%v.%v", label, runner.Name)
 			builder := &Builder{runner, manager, execQueue}
 			if err := srv.RegisterMethod(methodName, builder.Build); err != nil {
 				log.Print(err)
