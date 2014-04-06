@@ -1,4 +1,4 @@
-// Copyright (c) 2014 Salsita s.r.o.
+// Copyright (c) 2014 The AUTHORS
 //
 // This file is part of paprika.
 //
@@ -21,11 +21,29 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"strings"
 )
 
-func ParseArgs(label, runner, repository, script string, env []string) (method string, args interface{}, err error) {
+func ParseArgs(slave, repository, script, runner string, env []string) (method string, args interface{}, err error) {
+	// Make sure that the arguments are not empty.
+	var unset string
+	switch {
+	case slave == "":
+		unset = "slave"
+	case runner == "":
+		unset = "runner"
+	case repository == "":
+		unset = "repository"
+	case script == "":
+		unset = "script"
+	}
+	if unset != "" {
+		err = fmt.Errorf("argument cannot be empty: %v", unset)
+		return
+	}
+
 	// RPC method name
-	method = label + "." + runner
+	method = fmt.Sprintf("paprika.%v.%v", slave, runner)
 
 	// RPC arguments
 	args = &BuildArgs{
@@ -33,6 +51,7 @@ func ParseArgs(label, runner, repository, script string, env []string) (method s
 		Script:     script,
 		Env:        env,
 	}
+	err = args.Validate()
 
 	return
 }
@@ -64,5 +83,19 @@ func (args *BuildArgs) Validate() error {
 			repoURL.Scheme)
 	}
 
+	for _, kv := range args.Env {
+		if !strings.Contains(kv, "=") {
+			return &ErrInvalidEnvironment{kv}
+		}
+	}
+
 	return nil
+}
+
+type ErrInvalidEnvironment struct {
+	kv string
+}
+
+func (err *ErrInvalidEnvironment) Error() string {
+	return "invalid key-value pair: " + err.kv
 }

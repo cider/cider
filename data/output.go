@@ -1,4 +1,4 @@
-// Copyright (c) 2014 Salsita s.r.o.
+// Copyright (c) 2014 The AUTHORS
 //
 // This file is part of paprika.
 //
