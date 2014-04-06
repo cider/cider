@@ -77,7 +77,7 @@ func (m *BuildMaster) Listen() *BuildMaster {
 
 	// Set up the RPC service endpoint using WebSocket as the transport.
 	m.broker.RegisterEndpointFactory("websocket_rpc", func() (broker.Endpoint, error) {
-		factory := rpc.EndpointFactory{
+		config := &rpc.EndpointConfig{
 			Addr: m.address,
 			WSHandshake: func(cfg *websocket.Config, req *http.Request) error {
 				// Make sure that the a valid access token is present in the request.
@@ -88,8 +88,7 @@ func (m *BuildMaster) Listen() *BuildMaster {
 			},
 			HeartbeatPeriod: m.heartbeat,
 		}
-
-		return factory.NewEndpoint(balancer), nil
+		return rpc.NewEndpoint(config, balancer)
 	})
 
 	// Start the registered endpoint.

@@ -51,7 +51,7 @@ func ParseArgs(slave, repository, script, runner string, env []string) (method s
 		Script:     script,
 		Env:        env,
 	}
-	err = args.Validate()
+	err = args.(*BuildArgs).Validate()
 
 	return
 }

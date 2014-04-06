@@ -18,16 +18,17 @@
 package data
 
 import (
-	"errors"
 	"fmt"
-	"net/url"
+	"os"
+	"strings"
 
 	yaml "launchpad.net/goyaml"
 )
 
 type Config struct {
 	Master struct {
-		URL string `yaml:"url"`
+		URL   string `yaml:"url"`
+		Token string `yaml:"token"`
 	} `yaml:"master"`
 	Slave struct {
 		Label string `yaml:"label"`
@@ -42,18 +43,8 @@ type Config struct {
 	} `yaml:"script"`
 }
 
-func (config *Config) Validate() error {
-	if _, err := url.Parse(config.Master.URL); err != nil {
-		return err
-	}
-
-	_, _, err := ParseArgs(config.Slave.Label, config.Repository.URL,
-		config.Script.Path, config.Script.Runner, config.Script.Env)
-	if err != nil {
-		return err
-	}
-
-	return nil
+func NewConfig() *Config {
+	return new(Config)
 }
 
 func ParseConfig(data []byte) (*Config, error) {
@@ -61,10 +52,62 @@ func ParseConfig(data []byte) (*Config, error) {
 	if err := yaml.Unmarshal(data, config); err != nil {
 		return nil, err
 	}
+	return config, nil
+}
 
-	if err := config.Validate(); err != nil {
-		return nil, err
+func (config *Config) UpdateFromEnv(prefix string) error {
+	// Check all significant environment variables.
+	if v := os.Getenv(prefix + "_MASTER_URL"); v != "" && config.Master.URL == "" {
+		config.Master.URL = v
+	}
+	if v := os.Getenv(prefix + "_MASTER_TOKEN"); v != "" && config.Master.Token == "" {
+		config.Master.Token = v
+	}
+	if v := os.Getenv(prefix + "_SLAVE_LABEL"); v != "" && config.Slave.Label == "" {
+		config.Slave.Label = v
+	}
+	if v := os.Getenv(prefix + "_REPOSITORY_URL"); v != "" && config.Repository.URL == "" {
+		config.Repository.URL = v
+	}
+	if v := os.Getenv(prefix + "_SCRIPT_PATH"); v != "" && config.Script.Path == "" {
+		config.Script.Path = v
+	}
+	if v := os.Getenv(prefix + "_SCRIPT_RUNNER"); v != "" && config.Script.Runner == "" {
+		config.Script.Runner = v
 	}
 
-	return config, nil
+	// Provide some extra support for Circle CI.
+	if os.Getenv("CIRCLECI") != "" {
+		config.Repository.URL = fmt.Sprintf("git+ssh://git@github.com/%v/%v.git#%v",
+			os.Getenv("CIRCLE_PROJECT_USERNAME"),
+			os.Getenv("CIRCLE_PROJECT_REPONAME"),
+			os.Getenv("CIRCLE_BRANCH"))
+	}
+
+	pre := prefix + "_SCRIPT_ENV_"
+ReadEnv:
+	// Iterate over all the environment variables.
+	for _, kv := range os.Environ() {
+		// Pick the ones that start with the right prefix.
+		if strings.HasPrefix(kv, pre) {
+			parts := strings.SplitN(kv, "=", 1)
+			// Just ignore the malformed key-value pairs.
+			if len(parts) != 2 {
+				continue ReadEnv
+			}
+			// Drop the prefix that is not really a part of the variable name.
+			varPrefix := parts[0][len(pre):] + "="
+			for _, kw := range config.Script.Env {
+				// Skip the variable if it is already set in config.Script.Env.
+				if strings.HasPrefix(kw, varPrefix) {
+					continue ReadEnv
+				}
+				// Otherwise update config.Script.Env to incorporate the
+				// environment variable.
+				config.Script.Env = append(config.Script.Env, kv[len(pre):])
+			}
+		}
+	}
+
+	return nil
 }

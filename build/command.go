@@ -20,29 +20,33 @@ package build
 import (
 	// Stdlib
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"strings"
 
 	// Paprika
 	"github.com/paprikaci/paprika/data"
-	"github.com/paprikaci/paprika/utils"
 
 	// Others
 	"github.com/cihub/seelog"
 	"github.com/tchap/gocli"
 )
 
+const ConfigFileName = ".paprika.yml"
+
 var (
 	verboseMode bool
 	master      string
 	token       string
-	label       string
-	runner      string
+	slave       string
 	repository  string
 	script      string
+	runner      string
 	env         = Env(make([]string, 0))
 )
+
+var config = data.NewConfig()
 
 type Env []string
 
@@ -63,32 +67,34 @@ func (env *Env) String() string {
 
 var Command = &gocli.Command{
 	UsageLine: `
-  build [-verbose] [-master=URL] [-token=TOKEN] [-label=LABEL] [-runner=RUNNER]
+  build [-verbose] [-master=URL] [-token=TOKEN] [-slave=SLAVE] [-runner=RUNNER]
         [-repository=REPO] [-script=SCRIPT] [-env KEY=VALUE ...]`,
 	Short: "trigger a build",
 	Long: `
   Trigger a build on the specified build slave.
 
-  The build slave is chosen depending on LABEL and RUNNER. When suitable
-  build slave is found, a job is enqueued, which is defined by a repository
-  located at SOURCES, and SCRIPT, which is a relative path to a script located
-  within SOURCES.
+  The build slave is chosen depending on SLAVE and RUNNER. When suitable build
+  slave is found, a new job is enqueued, which is defined by the repository
+  located at REPO, and SCRIPT, which is a relative path to a script located
+  within REPO. RUNNER program is used to run the script.
 
   Example:
     $ paprika build -master wss://paprika.example.com/build -token=12345
-	            -label macosx -runner bash
+                    -slave macosx -runner bash
                     -repository git+ssh://github.com/foo/bar.git#develop
                     -script scripts/build -env ENVIRONMENT=testing -env DEBUG=y
 
   ENVIRONMENT:
     The following environment variables can be used instead of the relevant
-	command line flags. The flags have higher priority, though.
-      PAPRIKA_MASTER
-	  PAPRIKA_TOKEN
-	  PAPRIKA_LABEL
-	  PAPRIKA_RUNNER
-	  PAPRIKA_REPOSITORY
-	  PAPRIKA_SCRIPT
+    command line flags. The flags have higher priority, though.
+
+      PAPRIKA_MASTER_URL
+      PAPRIKA_MASTER_TOKEN
+      PAPRIKA_SLAVE_LABEL
+      PAPRIKA_REPOSITORY_URL
+      PAPRIKA_SCRIPT_PATH
+      PAPRIKA_SCRIPT_RUNNER
+      PAPRIKA_SCRIPT_ENV_<KEY> - equivalent to -env KEY=...
 	`,
 	Action: triggerBuild,
 }
@@ -98,11 +104,11 @@ func init() {
 	cmd.Flags.BoolVar(&verboseMode, "verbose", verboseMode, "print more verbose output")
 	cmd.Flags.StringVar(&master, "master", master, "build master to connect to")
 	cmd.Flags.StringVar(&token, "token", token, "build master access token")
-	cmd.Flags.StringVar(&label, "label", label, "slave label")
+	cmd.Flags.StringVar(&slave, "slave", slave, "slave label")
 	cmd.Flags.StringVar(&runner, "runner", runner, "script runner")
 	cmd.Flags.StringVar(&repository, "repository", repository, "project repository URL")
 	cmd.Flags.StringVar(&script, "script", script, "relative path to the script to run")
-	cmd.Flags.Var(&env, "env", "define an environment variable for the build run")
+	cmd.Flags.Var((*Env)(&config.Script.Env), "env", "define an environment variable for the build run")
 }
 
 func triggerBuild(cmd *gocli.Command, argv []string) {
@@ -112,38 +118,69 @@ func triggerBuild(cmd *gocli.Command, argv []string) {
 		os.Exit(2)
 	}
 
-	// Read the environment to fill in missing parameters.
-	utils.GetenvOrFailNow(&master, "PAPRIKA_MASTER", cmd)
-	utils.GetenvOrFailNow(&token, "PAPRIKA_TOKEN", cmd)
-	utils.GetenvOrFailNow(&label, "PAPRIKA_LABEL", cmd)
-	utils.GetenvOrFailNow(&runner, "PAPRIKA_RUNNER", cmd)
-	utils.GetenvOrFailNow(&repository, "PAPRIKA_REPOSITORY", cmd)
-	utils.GetenvOrFailNow(&script, "PAPRIKA_SCRIPT", cmd)
-
-	// Provide some extra support for Circle CI.
-	if os.Getenv("CIRCLECI") != "" {
-		repository = fmt.Sprintf("git+ssh://git@github.com/%s/%s.git#%s",
-			os.Getenv("CIRCLE_PROJECT_USERNAME"),
-			os.Getenv("CIRCLE_PROJECT_REPONAME"),
-			os.Getenv("CIRCLE_BRANCH"))
-	}
-
 	// Disable all the log prefixes and what not.
 	log.SetFlags(0)
 
 	// This must be here as long as go-cider logging is retarded as it is now.
 	seelog.ReplaceLogger(seelog.Disabled)
 
-	// Parse the RPC arguments. This performs some early arguments validation.
-	method, args, err := data.ParseArgs(label, runner, repository, script, env)
+	// Try to read the config file.
+	configContent, err := ioutil.ReadFile(ConfigFileName)
+	if err != nil {
+		if !os.IsNotExist(err) {
+			log.Fatalf("\nError: %v\n", err)
+		}
+	}
+
+	config, err := data.ParseConfig(configContent)
 	if err != nil {
 		log.Fatalf("\nError: %v\n", err)
 	}
 
-	// Since we managed to parse and verify the arguments, we can happily start
-	// building the project and streaming the output.
+	// Update the config from environment variables.
+	if err := config.UpdateFromEnv("PAPRIKA"); err != nil {
+		log.Fatalf("\nError: %v\n", err)
+	}
+
+	// Flags overwrite any previously set configuration.
+	if master != "" {
+		config.Master.URL = master
+	}
+	if token != "" {
+		config.Master.Token = token
+	}
+	if slave != "" {
+		config.Slave.Label = slave
+	}
+	if repository != "" {
+		config.Repository.URL = repository
+	}
+	if script != "" {
+		config.Script.Path = script
+	}
+	if runner != "" {
+		config.Script.Runner = runner
+	}
+
+	// Parse the RPC arguments. This performs some early arguments validation.
+	method, args, err := data.ParseArgs(config.Slave.Label, config.Repository.URL,
+		config.Script.Path, config.Script.Runner, config.Script.Env)
+	if err != nil {
+		log.Fatalf("\nError: %v\n", err)
+	}
+
+	// Check that the build master config is complete as well.
+	switch {
+	case config.Master.URL == "":
+		log.Fatalln("\nError: build master URL is not set")
+	case config.Master.Token == "":
+		log.Fatalln("\nError: build master access token is not set")
+	}
+
+	// Send the build request and stream the output to the console.
 	var result data.BuildResult
-	if err := call(method, args, &result); err != nil {
+	err = call(config.Master.URL, config.Master.Token, method, args, &result)
+	if err != nil {
 		log.Fatalf("\nError: %v\n", err)
 	}
 

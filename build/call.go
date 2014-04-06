@@ -1,4 +1,4 @@
-// Copyright (c) 2014 Salsita s.r.o.
+// Copyright (c) 2014 The AUTHORS
 //
 // This file is part of paprika.
 //
@@ -37,9 +37,27 @@ import (
 	"github.com/wsxiaoys/terminal/color"
 )
 
-const TokenHeader = "X-Paprika-Token"
+const TokenHeader = "X-Cider-Token"
 
-func call(method string, args interface{}, result *data.BuildResult) error {
+func call(master, token, method string, args interface{}, result *data.BuildResult) error {
+	// Make sure all arguments are set.
+	var unset string
+	switch {
+	case master == "":
+		unset = "master"
+	case token == "":
+		unset = "token"
+	case method == "":
+		unset = "method"
+	case args == nil:
+		unset = "args"
+	case result == nil:
+		unset = "result"
+	}
+	if unset != "" {
+		panic(fmt.Errorf("call(): argument is empty: %v", unset))
+	}
+
 	// Create a Cider RPC client that uses WebSocket transport.
 	fmt.Printf("---> Connecting to %v\n", master)
 	client, err := rpc.NewService(func() (rpc.Transport, error) {
