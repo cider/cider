@@ -104,18 +104,17 @@ func (builder *Builder) Build(request rpc.RemoteRequest) {
 		return
 	}
 
-	fmt.Fprintln(stdout, "---> Pulling the sources")
+	fmt.Fprintln(stdout, "\n---> Pulling the sources")
 	if srcDirExists {
 		err = vcs.Pull(repoURL, srcDir, request)
 	} else {
 		err = vcs.Clone(repoURL, srcDir, request)
 	}
+	pullT := time.Now()
 	if err != nil {
-		resolve(request, 8, startT, nil, nil, err)
+		resolve(request, 8, startT, &pullT, nil, err)
 		return
 	}
-
-	pullT := time.Now()
 
 	// Run the specified script.
 	cmd := builder.runner.NewCommand(args.Script)
@@ -129,11 +128,10 @@ func (builder *Builder) Build(request rpc.RemoteRequest) {
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
 
-	fmt.Fprintf(stdout, "---> Running the script located at %v (using runner %q)\n",
+	fmt.Fprintf(stdout, "\n---> Running the script located at %v (using runner %q)\n",
 		args.Script, builder.runner.Name)
 	err = executil.Run(cmd, request.Interrupted())
 	buildT := time.Now()
-	fmt.Fprintln(stdout, "---> Build finished")
 	if err != nil {
 		resolve(request, 1, startT, &pullT, &buildT, err)
 		return
@@ -168,6 +166,9 @@ func resolve(req rpc.RemoteRequest, retCode rpc.ReturnCode, startT time.Time, pu
 	}
 	if err != nil {
 		retValue.Error = err.Error()
+		fmt.Fprintln(req.Stdout(), "\n---> Build failed")
+	} else {
+		fmt.Fprintln(req.Stdout(), "\n---> Build succeeded")
 	}
 	req.Resolve(retCode, retValue)
 }

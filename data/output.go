@@ -59,13 +59,15 @@ func (result BuildResult) WriteSummary(w io.Writer) {
 		}
 	}
 
-	format := "%" + strconv.Itoa(maxDotIndex) + "v.%-" + strconv.Itoa(maxFragmentLen) + "v"
+	format := "%" + strconv.Itoa(maxDotIndex) + "v"
+	formatFrag := "%" + strconv.Itoa(maxDotIndex) + "v.%-" + strconv.Itoa(maxFragmentLen) + "v"
 	for _, s := range all {
 		parts := strings.Split(*s, ".")
 		if len(parts) == 1 {
-			parts = append(parts, "")
+			*s = fmt.Sprintf(format, parts[0])
+		} else {
+			*s = fmt.Sprintf(formatFrag, parts[0], parts[1])
 		}
-		*s = fmt.Sprintf(format, parts[0], parts[1])
 	}
 
 	fmt.Fprintf(w, "Pull  duration: %v\n", *all[0])

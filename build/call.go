@@ -94,7 +94,7 @@ func call(master, token, method string, args interface{}, result *data.BuildResu
 	select {
 	case <-call.Resolved():
 	case <-signalCh:
-		color.Println("@{r}---> Interrupting the build job")
+		fmt.Println("---> Interrupting the build job, this can take a few seconds")
 		if err := call.Interrupt(); err != nil {
 			return err
 		}
