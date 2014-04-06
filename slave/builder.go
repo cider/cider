@@ -88,19 +88,19 @@ func (builder *Builder) Build(request rpc.RemoteRequest) {
 	}()
 
 	// Start measuring the build time.
-	startTimestamp := time.Now()
+	startT := time.Now()
 
 	// Check out the sources at the right revision.
 	srcDir := builder.manager.SrcDir(workspace)
 	srcDirExists, err := builder.manager.SrcDirExists(workspace)
 	if err != nil {
-		resolve(request, 6, startTimestamp, err)
+		resolve(request, 6, startT, nil, nil, err)
 		return
 	}
 
 	vcs, err := vcsutil.GetVCS(repoURL.Scheme)
 	if err != nil {
-		resolve(request, 7, startTimestamp, err)
+		resolve(request, 7, startT, nil, nil, err)
 		return
 	}
 
@@ -111,9 +111,11 @@ func (builder *Builder) Build(request rpc.RemoteRequest) {
 		err = vcs.Clone(repoURL, srcDir, request)
 	}
 	if err != nil {
-		resolve(request, 8, startTimestamp, err)
+		resolve(request, 8, startT, nil, nil, err)
 		return
 	}
+
+	pullT := time.Now()
 
 	// Run the specified script.
 	cmd := builder.runner.NewCommand(args.Script)
@@ -130,14 +132,15 @@ func (builder *Builder) Build(request rpc.RemoteRequest) {
 	fmt.Fprintf(stdout, "---> Running the script located at %v (using runner %q)\n",
 		args.Script, builder.runner.Name)
 	err = executil.Run(cmd, request.Interrupted())
+	buildT := time.Now()
 	fmt.Fprintln(stdout, "---> Build finished")
 	if err != nil {
-		resolve(request, 1, startTimestamp, err)
+		resolve(request, 1, startT, &pullT, &buildT, err)
 		return
 	}
 
 	// Return success, at last.
-	resolve(request, 0, startTimestamp, nil)
+	resolve(request, 0, startT, &pullT, &buildT, nil)
 }
 
 func acquire(msg string, queue chan bool, request rpc.RemoteRequest) (err string) {
@@ -155,9 +158,13 @@ func acquire(msg string, queue chan bool, request rpc.RemoteRequest) (err string
 	}
 }
 
-func resolve(req rpc.RemoteRequest, retCode rpc.ReturnCode, start time.Time, err error) {
-	retValue := &data.BuildResult{
-		Duration: time.Now().Sub(start),
+func resolve(req rpc.RemoteRequest, retCode rpc.ReturnCode, startT time.Time, pullT *time.Time, buildT *time.Time, err error) {
+	retValue := new(data.BuildResult)
+	if pullT != nil {
+		retValue.PullDuration = pullT.Sub(startT)
+	}
+	if buildT != nil {
+		retValue.BuildDuration = buildT.Sub(*pullT)
 	}
 	if err != nil {
 		retValue.Error = err.Error()

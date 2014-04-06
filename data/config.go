@@ -86,24 +86,24 @@ func ParseConfig(data []byte) (*Config, error) {
 	return config, nil
 }
 
-func (config *Config) UpdateFromEnv(prefix string) error {
+func (config *Config) FeedFromEnv(prefix string) error {
 	// Check all significant environment variables.
-	if v := os.Getenv(prefix + "_MASTER_URL"); v != "" && config.Master.URL == "" {
+	if v := os.Getenv(prefix + "_MASTER_URL"); v != "" {
 		config.Master.URL = v
 	}
-	if v := os.Getenv(prefix + "_MASTER_TOKEN"); v != "" && config.Master.Token == "" {
+	if v := os.Getenv(prefix + "_MASTER_TOKEN"); v != "" {
 		config.Master.Token = v
 	}
-	if v := os.Getenv(prefix + "_SLAVE_LABEL"); v != "" && config.Slave.Label == "" {
+	if v := os.Getenv(prefix + "_SLAVE_LABEL"); v != "" {
 		config.Slave.Label = v
 	}
-	if v := os.Getenv(prefix + "_REPOSITORY_URL"); v != "" && config.Repository.URL == "" {
+	if v := os.Getenv(prefix + "_REPOSITORY_URL"); v != "" {
 		config.Repository.URL = v
 	}
-	if v := os.Getenv(prefix + "_SCRIPT_PATH"); v != "" && config.Script.Path == "" {
+	if v := os.Getenv(prefix + "_SCRIPT_PATH"); v != "" {
 		config.Script.Path = v
 	}
-	if v := os.Getenv(prefix + "_SCRIPT_RUNNER"); v != "" && config.Script.Runner == "" {
+	if v := os.Getenv(prefix + "_SCRIPT_RUNNER"); v != "" {
 		config.Script.Runner = v
 	}
 

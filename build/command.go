@@ -119,7 +119,7 @@ func triggerBuild(cmd *gocli.Command, argv []string) {
 	}
 
 	// Update the config from environment variables.
-	if err := config.UpdateFromEnv("PAPRIKA"); err != nil {
+	if err := config.FeedFromEnv("PAPRIKA"); err != nil {
 		log.Fatalf("\nError: %v\n", err)
 	}
 
