@@ -56,8 +56,8 @@ var Command = &gocli.Command{
   responding.
 
 ENVIRONMENT:
-  PAPRIKA_LISTEN - can be used instead of -listen
-  PAPRIKA_TOKEN  - can be used instead of -token
+  PAPRIKA_MASTER_LISTEN - can be used instead of -listen
+  PAPRIKA_MASTER_TOKEN  - can be used instead of -token
 	`,
 	Action: run,
 }
@@ -80,8 +80,8 @@ func run(cmd *gocli.Command, args []string) {
 	}
 
 	// Read the environment to fill in the missing parameters.
-	utils.GetenvOrFailNow(&listen, "PAPRIKA_LISTEN", cmd)
-	utils.GetenvOrFailNow(&token, "PAPRIKA_TOKEN", cmd)
+	utils.GetenvOrFailNow(&listen, "PAPRIKA_MASTER_LISTEN", cmd)
+	utils.GetenvOrFailNow(&token, "PAPRIKA_MASTER_TOKEN", cmd)
 
 	// Start catching signals.
 	signalCh := make(chan os.Signal, 1)
