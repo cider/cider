@@ -21,6 +21,7 @@ import (
 	// Stdlib
 	"log"
 	"os"
+	"runtime"
 
 	// Others
 	"bitbucket.org/kardianos/service"
@@ -32,6 +33,10 @@ func init() {
 }
 
 func install(cmd *gocli.Command, args []string) {
+	if runtime.GOOS != "windows" {
+		panic("Platform not supported")
+	}
+
 	log.SetFlags(0)
 	log.SetPrefix("Error: ")
 

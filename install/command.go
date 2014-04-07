@@ -25,7 +25,5 @@ var Command = &gocli.Command{
 	Long: `
   Install Paprika as a service. Currently only works on Windows.
 	`,
-	Action: func(cmd *gocli.Command, args []string) {
-		panic("Not implemented")
-	},
+	Action: install,
 }
