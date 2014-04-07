@@ -57,8 +57,7 @@ ENVIRONMENT:
 	Action: RunSlave,
 }
 
-func init() {
-	cmd := Command
+func ConfigureFlags(cmd *gocli.Command) {
 	cmd.Flags.StringVar(&master, "master", master, "build master to connect to")
 	cmd.Flags.StringVar(&token, "token", token, "build master access token")
 	cmd.Flags.StringVar(&identity, "identity", identity, "build slave identity; must be unique")
@@ -66,6 +65,10 @@ func init() {
 	cmd.Flags.StringVar(&workspace, "workspace", workspace, "build workspace")
 	cmd.Flags.UintVar(&executors, "executors", executors, "number of jobs that can run in parallel")
 	cmd.Flags.BoolVar(&debugMode, "debug", debugMode, "print debug output to the console")
+}
+
+func init() {
+	ConfigureFlags(Command)
 }
 
 func RunSlave(cmd *gocli.Command, args []string) {

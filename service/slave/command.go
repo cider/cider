@@ -78,5 +78,6 @@ var runCommand = &gocli.Command{
 
 func init() {
 	Command.MustRegisterSubcommand(installCommand)
+	slave.ConfigureFlags(runCommand)
 	Command.MustRegisterSubcommand(runCommand)
 }
