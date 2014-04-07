@@ -43,9 +43,14 @@ const TokenHeader = "X-Cider-Token"
 func enslave() {
 	log.SetFlags(0)
 
-	// This must be here as long as go-cider logging is retarded.
-	seelog.ReplaceLogger(seelog.Default)
-	//seelog.ReplaceLogger(seelog.Disabled)
+	if !debugMode {
+		logger, err := seelog.LoggerFromConfigAsString(`<seelog minlevel="warn"></seelog>`)
+		if err != nil {
+			panic(err)
+		}
+		seelog.ReplaceLogger(logger)
+	}
+	defer seelog.Flush()
 
 	// Connect to the master node using the WebSocket transport.
 	// The specified token is used to authenticated the build slave.
@@ -100,12 +105,14 @@ func enslave() {
 		}
 	}
 
+	log.Println("---> Waiting for incoming requests")
+
 	// Block until either there is a fatal error or a signal is received.
 	select {
 	case <-srv.Closed():
 		goto Wait
 	case <-signalCh:
-		log.Println("Signal received, exiting...")
+		log.Println("---> Signal received, exiting...")
 		goto Close
 	}
 

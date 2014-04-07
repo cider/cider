@@ -36,15 +36,23 @@ var (
 	labels    string
 	workspace string
 	executors = uint(runtime.NumCPU())
+	debugMode bool
 )
 
 var Command = &gocli.Command{
 	UsageLine: `
   slave [-master=URL] [-token=TOKEN] [-identity=IDENTITY] [-labels=LABELS]
-        [-workspace=WORKSPACE] [-executors=EXECUTORS]`,
+        [-workspace=WORKSPACE] [-executors=EXECUTORS] [-debug]`,
 	Short: "run a build slave",
 	Long: `
-  Start a build slave and connect it to the specified master node.
+    Start a build slave and connect it to the specified master node.
+
+  ENVIRONMENT:
+    PAPRIKA_MASTER_URL
+    PAPRIKA_MASTER_TOKEN
+    PAPRIKA_SLAVE_IDENTITY
+    PAPRIKA_SLAVE_LABELS
+    PAPRIKA_SLAVE_WORKSPACE
 	`,
 	Action: enslaveThisPoorMachine,
 }
@@ -57,6 +65,7 @@ func init() {
 	cmd.Flags.StringVar(&labels, "labels", labels, "labels to apply to this slave")
 	cmd.Flags.StringVar(&workspace, "workspace", workspace, "build workspace")
 	cmd.Flags.UintVar(&executors, "executors", executors, "number of jobs that can run in parallel")
+	cmd.Flags.BoolVar(&debugMode, "debug", debugMode, "print debug output to the console")
 }
 
 func enslaveThisPoorMachine(cmd *gocli.Command, args []string) {
@@ -67,11 +76,11 @@ func enslaveThisPoorMachine(cmd *gocli.Command, args []string) {
 	}
 
 	// Read the environment to fill in missing parameters.
-	utils.GetenvOrFailNow(&master, "PAPRIKA_MASTER", cmd)
+	utils.GetenvOrFailNow(&master, "PAPRIKA_MASTER_URL", cmd)
 	utils.GetenvOrFailNow(&token, "PAPRIKA_MASTER_TOKEN", cmd)
-	utils.GetenvOrFailNow(&identity, "PAPRIKA_IDENTITY", cmd)
-	utils.Getenv(&labels, "PAPRIKA_LABELS")
-	utils.GetenvOrFailNow(&workspace, "PAPRIKA_WORKSPACE", cmd)
+	utils.GetenvOrFailNow(&identity, "PAPRIKA_SLAVE_IDENTITY", cmd)
+	utils.Getenv(&labels, "PAPRIKA_SLAVE_LABELS")
+	utils.GetenvOrFailNow(&workspace, "PAPRIKA_SLAVE_WORKSPACE", cmd)
 
 	// Run the main function.
 	enslave()
