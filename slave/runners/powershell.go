@@ -19,29 +19,15 @@ package runners
 
 import "os/exec"
 
-type Runner struct {
-	Name       string
-	NewCommand func(script string) *exec.Cmd
-}
-
-var factories = [...]func() *Runner{
-	bashFactory,
-	powerShellFactory,
-	nodeFactory,
-}
-
-var Available = make([]*Runner, 0)
-
-func init() {
-	ch := make(chan *Runner, len(factories))
-	for i := range factories {
-		go func(index int) {
-			ch <- factories[index]()
-		}(i)
+func powerShellFactory() *Runner {
+	if exec.Command("PowerShell.exe", "-Command", "& {Get-Date}").Run() != nil {
+		return nil
 	}
-	for _ = range factories {
-		if runner := <-ch; runner != nil {
-			Available = append(Available, runner)
-		}
+
+	return &Runner{
+		Name: "powershell",
+		NewCommand: func(script string) *exec.Cmd {
+			return exec.Command("PowerShell.exe", "-NoLogo", "-NonInteractive", script)
+		},
 	}
 }
