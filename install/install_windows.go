@@ -15,16 +15,16 @@
 // You should have received a copy of the GNU General Public License
 // along with paprika.  If not, see <http://www.gnu.org/licenses/>.
 
-// +build windows
-
 package install
 
 import (
 	// Stdlib
 	"log"
+	"os"
 
 	// Others
 	"bitbucket.org/kardianos/service"
+	"github.com/tchap/gocli"
 )
 
 func init() {
