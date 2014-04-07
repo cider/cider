@@ -25,6 +25,8 @@ import (
 	yaml "launchpad.net/goyaml"
 )
 
+const ConfigFileName = "paprika.yml"
+
 type Env []string
 
 func (env *Env) Set(kv string) error {

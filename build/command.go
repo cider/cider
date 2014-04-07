@@ -31,8 +31,6 @@ import (
 	"github.com/tchap/gocli"
 )
 
-const ConfigFileName = ".paprika.yml"
-
 var (
 	verboseMode bool
 	master      string
@@ -106,7 +104,7 @@ func triggerBuild(cmd *gocli.Command, argv []string) {
 	seelog.ReplaceLogger(seelog.Disabled)
 
 	// Try to read the config file.
-	configContent, err := ioutil.ReadFile(ConfigFileName)
+	configContent, err := ioutil.ReadFile(data.ConfigFileName)
 	if err != nil {
 		if !os.IsNotExist(err) {
 			log.Fatalf("\nError: %v\n", err)
