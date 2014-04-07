@@ -41,7 +41,7 @@ var logger service.Logger
 
 func RunSlaveService(cmd *gocli.Command, args []string) {
 	// Make sure there are no other args specified.
-	if len(args) != 0 {
+	if len(args) != 1 {
 		cmd.Usage()
 		os.Exit(2)
 	}
@@ -50,7 +50,7 @@ func RunSlaveService(cmd *gocli.Command, args []string) {
 	seelog.ReplaceLogger(seelog.Disabled)
 
 	// Prepare a Windows service instance.
-	srv, err := service.NewService("Paprika slave", "Paprika slave", "Paprika slave")
+	srv, err := service.NewService(args[0], "", "")
 	if err != nil {
 		os.Exit(1)
 	}

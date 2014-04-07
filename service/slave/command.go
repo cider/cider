@@ -66,7 +66,7 @@ var installCommand = &gocli.Command{
 }
 
 var runCommand = &gocli.Command{
-	UsageLine: "run [OPTION ...] ARG ...",
+	UsageLine: "run [OPTION ...] SERVICE_NAME",
 	Short:     "run Paprika slave Windows service",
 	Long: `
   Run Paprika slave as a Windows service.
