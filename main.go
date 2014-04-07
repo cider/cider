@@ -21,8 +21,8 @@ import (
 	"os"
 
 	"github.com/paprikaci/paprika/build"
-	"github.com/paprikaci/paprika/install"
 	"github.com/paprikaci/paprika/master"
+	"github.com/paprikaci/paprika/service"
 	"github.com/paprikaci/paprika/slave"
 
 	"github.com/tchap/gocli"
@@ -52,8 +52,8 @@ func main() {
   To understand more about how Paprika works, check the available subcommands.`
 
 	paprika.MustRegisterSubcommand(build.Command)
-	paprika.MustRegisterSubcommand(install.Command)
 	paprika.MustRegisterSubcommand(master.Command)
+	paprika.MustRegisterSubcommand(service.Command)
 	paprika.MustRegisterSubcommand(slave.Command)
 
 	paprika.Run(os.Args[1:])

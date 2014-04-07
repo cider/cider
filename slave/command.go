@@ -45,16 +45,16 @@ var Command = &gocli.Command{
         [-workspace=WORKSPACE] [-executors=EXECUTORS] [-debug]`,
 	Short: "run a build slave",
 	Long: `
-    Start a build slave and connect it to the specified master node.
+  Start a build slave and connect it to the specified master node.
 
-  ENVIRONMENT:
-    PAPRIKA_MASTER_URL
-    PAPRIKA_MASTER_TOKEN
-    PAPRIKA_SLAVE_IDENTITY
-    PAPRIKA_SLAVE_LABELS
-    PAPRIKA_SLAVE_WORKSPACE
+ENVIRONMENT:
+  PAPRIKA_MASTER_URL
+  PAPRIKA_MASTER_TOKEN
+  PAPRIKA_SLAVE_IDENTITY
+  PAPRIKA_SLAVE_LABELS
+  PAPRIKA_SLAVE_WORKSPACE
 	`,
-	Action: enslaveThisPoorMachine,
+	Action: RunSlave,
 }
 
 func init() {
@@ -68,7 +68,7 @@ func init() {
 	cmd.Flags.BoolVar(&debugMode, "debug", debugMode, "print debug output to the console")
 }
 
-func enslaveThisPoorMachine(cmd *gocli.Command, args []string) {
+func RunSlave(cmd *gocli.Command, args []string) {
 	// Make sure there were no arguments specified.
 	if len(args) != 0 {
 		cmd.Usage()

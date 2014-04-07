@@ -15,15 +15,21 @@
 // You should have received a copy of the GNU General Public License
 // along with paprika.  If not, see <http://www.gnu.org/licenses/>.
 
-package install
+package service
 
-import "github.com/tchap/gocli"
+import (
+	"github.com/paprikaci/paprika/service/slave"
+	"github.com/tchap/gocli"
+)
 
 var Command = &gocli.Command{
-	UsageLine: "install NAME DISPLAY_NAME DESCRIPTION",
-	Short:     "install Paprika as a service",
+	UsageLine: "service SUBCMD",
+	Short:     "Paprika Windows service management",
 	Long: `
-  Install Paprika as a service. Currently only works on Windows.
+  Install and run Paprika as a Windows service.
 	`,
-	Action: install,
+}
+
+func init() {
+	Command.MustRegisterSubcommand(slave.Command)
 }
