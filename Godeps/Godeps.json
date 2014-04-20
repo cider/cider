@@ -1,0 +1,61 @@
+{
+	"ImportPath": "github.com/paprikaci/paprika",
+	"GoVersion": "go1.2",
+	"Deps": [
+		{
+			"ImportPath": "code.google.com/p/go.net/websocket",
+			"Comment": "null-119",
+			"Rev": "cdbc77c5e0064a55bdd9a6decd6e0d8f23c779ef"
+		},
+		{
+			"ImportPath": "github.com/cider/cider/apps/utils/executil",
+			"Rev": "3c0d99ac1f69fcdd4702cb7917e93ad2aa6d3fca"
+		},
+		{
+			"ImportPath": "github.com/cider/cider/apps/utils/vcsutil",
+			"Rev": "3c0d99ac1f69fcdd4702cb7917e93ad2aa6d3fca"
+		},
+		{
+			"ImportPath": "github.com/cider/cider/broker",
+			"Rev": "3c0d99ac1f69fcdd4702cb7917e93ad2aa6d3fca"
+		},
+		{
+			"ImportPath": "github.com/cider/go-cider/cider/services",
+			"Rev": "eee8f7e9d3b5f2feba2839ec0fb774b3a5c19aa8"
+		},
+		{
+			"ImportPath": "github.com/cider/go-cider/cider/transports/websocket/rpc",
+			"Rev": "eee8f7e9d3b5f2feba2839ec0fb774b3a5c19aa8"
+		},
+		{
+			"ImportPath": "github.com/cider/go-cider/cider/utils/codecs",
+			"Rev": "eee8f7e9d3b5f2feba2839ec0fb774b3a5c19aa8"
+		},
+		{
+			"ImportPath": "github.com/cihub/seelog",
+			"Comment": "go1.1-4-g6916c12",
+			"Rev": "6916c1271534ee68a12381356a0555075f6a6d76"
+		},
+		{
+			"ImportPath": "github.com/tchap/go-websocket-frames/frames",
+			"Rev": "a378c202318e48fe169ad017a438a911df305390"
+		},
+		{
+			"ImportPath": "github.com/tchap/gocli",
+			"Rev": "a3534c325b9899298b7a7b2c1cf2989ad60b06b0"
+		},
+		{
+			"ImportPath": "github.com/ugorji/go/codec",
+			"Rev": "71c2886f5a673a35f909803f38ece5810165097b"
+		},
+		{
+			"ImportPath": "github.com/wsxiaoys/terminal/color",
+			"Rev": "a83cd00f6d7acf3554bc24f06d7f9e48a90d0a47"
+		},
+		{
+			"ImportPath": "launchpad.net/goyaml",
+			"Comment": "51",
+			"Rev": "gustavo@niemeyer.net-20140305200416-7gh64vkcckre5mob"
+		}
+	]
+}
