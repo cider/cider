@@ -111,7 +111,7 @@ func (config *Config) FeedFromEnv(prefix string) error {
 
 	// Provide some extra support for Circle CI.
 	if os.Getenv("CIRCLECI") != "" {
-		config.Repository.URL = fmt.Sprintf("git+ssh://git@github.com/%v/%v.git#%v",
+		config.Repository.URL = fmt.Sprintf("git+ssh://git@github.com/%v/%v#%v",
 			os.Getenv("CIRCLE_PROJECT_USERNAME"),
 			os.Getenv("CIRCLE_PROJECT_REPONAME"),
 			os.Getenv("CIRCLE_BRANCH"))
