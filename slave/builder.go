@@ -104,7 +104,7 @@ func (builder *Builder) Build(request rpc.RemoteRequest) {
 		return
 	}
 
-	fmt.Fprintln(stdout, "\n---> Pulling the sources")
+	fmt.Fprintf(stdout, "\n---> Pulling the sources (using URL %q)\n", args.Repository)
 	if srcDirExists {
 		err = vcs.Pull(repoURL, srcDir, request)
 	} else {
