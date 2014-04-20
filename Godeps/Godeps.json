@@ -9,15 +9,15 @@
 		},
 		{
 			"ImportPath": "github.com/cider/cider/apps/utils/executil",
-			"Rev": "3c0d99ac1f69fcdd4702cb7917e93ad2aa6d3fca"
+			"Rev": "e7ae6191dfa81bd136bcd3a8ec5379d2eb51a01c"
 		},
 		{
 			"ImportPath": "github.com/cider/cider/apps/utils/vcsutil",
-			"Rev": "3c0d99ac1f69fcdd4702cb7917e93ad2aa6d3fca"
+			"Rev": "e7ae6191dfa81bd136bcd3a8ec5379d2eb51a01c"
 		},
 		{
 			"ImportPath": "github.com/cider/cider/broker",
-			"Rev": "3c0d99ac1f69fcdd4702cb7917e93ad2aa6d3fca"
+			"Rev": "e7ae6191dfa81bd136bcd3a8ec5379d2eb51a01c"
 		},
 		{
 			"ImportPath": "github.com/cider/go-cider/cider/services",

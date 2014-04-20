@@ -21,7 +21,7 @@ func newGitVCS(scheme string) VCS {
 }
 
 func (vcs *gitVCS) Clone(repoURL *url.URL, srcDir string, ctx ActionContext) error {
-	// Assemble clone URL.
+	// Assemble the cloning URL.
 	var buf bytes.Buffer
 	buf.WriteString(vcs.scheme)
 	buf.WriteString("://")
@@ -30,7 +30,6 @@ func (vcs *gitVCS) Clone(repoURL *url.URL, srcDir string, ctx ActionContext) err
 		buf.WriteString("@")
 	}
 	buf.WriteString(repoURL.Host)
-	buf.WriteByte('/')
 	buf.WriteString(repoURL.Path)
 
 	// Assemble git flags and arguments.
