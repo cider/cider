@@ -24,7 +24,7 @@ import (
 	"strings"
 )
 
-func ParseArgs(slave, repository, script, runner string, env []string) (method string, args interface{}, err error) {
+func ParseArgs(slave, repository, script, runner string, env []string) (method string, args *BuildArgs, err error) {
 	// Make sure that the arguments are not empty.
 	var unset string
 	switch {
@@ -51,7 +51,7 @@ func ParseArgs(slave, repository, script, runner string, env []string) (method s
 		Script:     script,
 		Env:        env,
 	}
-	err = args.(*BuildArgs).Validate()
+	err = args.Validate()
 
 	return
 }
@@ -78,6 +78,7 @@ func (args *BuildArgs) Validate() error {
 	switch repoURL.Scheme {
 	case "git+https":
 	case "git+ssh":
+	case "git+file":
 	default:
 		return fmt.Errorf("BuildArgs.Validate: unsupported repository URL scheme: %v",
 			repoURL.Scheme)

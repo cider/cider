@@ -19,12 +19,10 @@ package slave
 
 import (
 	// Stdlib
+	"errors"
 	"fmt"
-	"io"
-	"os"
-	"os/signal"
 	"strings"
-	"syscall"
+	"sync"
 	"time"
 
 	// Paprika
@@ -45,124 +43,62 @@ const (
 	errorCalmPeriod = 10 * time.Second
 	errorThreshold  = 5
 
+	minBackoff = time.Second
 	maxBackoff = time.Minute
 )
 
-func enslave() {
-	// Set up logging.
-	var (
-		logger log.LoggerInterface
-		err    error
-	)
-	switch {
-	case verboseMode:
-		logger, err = log.LoggerFromConfigAsString(`<seelog minlevel="info"></seelog>`)
-	case debugMode:
-		logger, err = log.LoggerFromConfigAsString(`<seelog minlevel="trace"></seelog>`)
-	default:
-		logger, err = log.LoggerFromConfigAsString(`<seelog minlevel="warn"></seelog>`)
-	}
-	if err != nil {
-		panic(err)
-	}
-	if err := log.ReplaceLogger(logger); err != nil {
-		panic(err)
-	}
+var (
+	ErrConnected    = errors.New("build slave already connected")
+	ErrDisconnected = errors.New("build slave has not been connected")
+)
 
-	// Start the slave loop. This loop takes care of reconnecting to the master
-	// node once the slave is disconnected. It does exponential backoff.
-	backoff := time.Second
-	for {
-		// Run the slave.
-		switch err := runSlave(); {
+type BuildSlave struct {
+	identity     string
+	workspace    string
+	numExecutors uint
+	service      *rpc.Service
+	mu           *sync.Mutex
+}
 
-		// EOF means disconnect. That is fine, we will try to reconnect.
-		case err == io.EOF:
-
-		// Nil error means a clean termination, in which case we just return.
-		case err == nil:
-			return
-
-		default:
-			// Bad status is also not treated as a fatal error.
-			// The master can be being restarted, so we try to reconnect later.
-			if ex, ok := err.(*websocket.DialError); ok {
-				if ex.Err.Error() == "bad status" {
-					log.Warn(err)
-					break
-				}
-			}
-
-			// Other errors are fatal.
-			log.Critical(err)
-			log.Flush()
-			os.Exit(1)
-		}
-
-		// Do exponential backoff.
-		log.Infof("Waiting for %v before reconnecting...", backoff)
-		time.Sleep(backoff)
-		backoff = 2 * backoff
-		if backoff > maxBackoff {
-			backoff = maxBackoff
-		}
+func New(identity, workspace string, numExecutors uint) *BuildSlave {
+	return &BuildSlave{
+		identity:     identity,
+		workspace:    workspace,
+		numExecutors: numExecutors,
+		mu:           new(sync.Mutex),
 	}
 }
 
-func runSlave() (err error) {
+func (slave *BuildSlave) Connect(master, token string) (err error) {
 	// Connect to the master node using the WebSocket transport.
 	// The specified token is used to authenticated the build slave.
+	slave.mu.Lock()
+	if slave.service != nil {
+		return ErrConnected
+	}
 	log.Infof("Connecting to %v", master)
-	srv, err := rpc.NewService(func() (rpc.Transport, error) {
+	service, err := rpc.NewService(func() (rpc.Transport, error) {
 		factory := ws.NewTransportFactory()
 		factory.Server = master
 		factory.Origin = "http://localhost"
 		factory.WSConfigFunc = func(config *websocket.Config) {
 			config.Header.Set(TokenHeader, token)
 		}
-		return factory.NewTransport(identity)
+		return factory.NewTransport(slave.identity)
 	})
 	if err != nil {
+		slave.mu.Unlock()
 		return err
 	}
-	// Close the service on return.
-	defer func() {
-		select {
-		case <-srv.Closed():
-			goto Wait
-		default:
-		}
-
-		if ex := srv.Close(); ex != nil {
-			if err == nil {
-				err = ex
-				return
-			}
-			log.Warn(err)
-			return
-		}
-
-	Wait:
-		if ex := srv.Wait(); ex != nil {
-			if err == nil {
-				err = ex
-				return
-			}
-			log.Warn(err)
-		}
-	}()
-
-	// Start catching signals.
-	signalCh := make(chan os.Signal, 1)
-	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)
-	defer signal.Stop(signalCh)
+	slave.service = service
+	slave.mu.Unlock()
 
 	// Number of concurrent builds is limited by creating a channel of the
 	// specified length. Every time a build is requested, the request handler
 	// sends some data to the channel, and when it is finished, it reads data
 	// from the same channel.
-	execQueue := make(chan bool, executors)
-	log.Infof("Initiating %v build executor(s)", executors)
+	execQueue := make(chan bool, slave.numExecutors)
+	log.Infof("Initiating %v build executor(s)", slave.numExecutors)
 
 	// Export all available labels and runners.
 	log.Info("Available runners:")
@@ -170,7 +106,7 @@ func runSlave() (err error) {
 		log.Infof("---> %v", runner.Name)
 	}
 
-	manager := newWorkspaceManager(workspace)
+	manager := newWorkspaceManager(slave.workspace)
 
 	ls := []string{"any"}
 	if labels != "" {
@@ -181,20 +117,58 @@ func runSlave() (err error) {
 		for _, runner := range runners.Available {
 			methodName := fmt.Sprintf("paprika.%v.%v", label, runner.Name)
 			builder := &Builder{runner, manager, execQueue}
-			if err := srv.RegisterMethod(methodName, builder.Build); err != nil {
-				return err
+			if ex := service.RegisterMethod(methodName, builder.Build); ex != nil {
+				err = ex
+				goto Close
 			}
 		}
 	}
 
-	log.Info("Waiting for incoming requests...")
+	log.Info("Waiting for build requests...")
+	goto Wait
 
-	// Block until either there is a fatal error or a signal is received.
-	select {
-	case <-srv.Closed():
-		return srv.Wait()
-	case <-signalCh:
-		log.Info("Signal received, exiting...")
+Close:
+	if ex := service.Close(); ex != nil {
+		log.Warn(err)
 		return
 	}
+
+Wait:
+	if ex := service.Wait(); ex != nil {
+		if err == nil {
+			err = ex
+			return
+		}
+		log.Warn(err)
+	}
+	return
+}
+
+func (slave *BuildSlave) Terminate() error {
+	slave.mu.Lock()
+	defer slave.mu.Unlock()
+	if slave.service == nil {
+		return ErrDisconnected
+	}
+	return slave.service.Close()
+}
+
+func (slave *BuildSlave) Terminated() <-chan struct{} {
+	slave.mu.Lock()
+	defer slave.mu.Unlock()
+	if slave.service == nil {
+		ch := make(chan struct{})
+		close(ch)
+		return ch
+	}
+	return slave.service.Closed()
+}
+
+func (slave *BuildSlave) Wait() error {
+	slave.mu.Lock()
+	defer slave.mu.Unlock()
+	if slave.service == nil {
+		return ErrDisconnected
+	}
+	return slave.service.Wait()
 }

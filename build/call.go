@@ -39,7 +39,57 @@ import (
 
 const TokenHeader = "X-Cider-Token"
 
-func call(master, token, method string, args interface{}, result *data.BuildResult) error {
+type Session struct {
+	*rpc.Service
+}
+
+func Dial(master, token string) (*Session, error) {
+	service, err := rpc.NewService(func() (rpc.Transport, error) {
+		factory := ws.NewTransportFactory()
+		factory.Server = master
+		factory.Origin = "http://localhost"
+		factory.WSConfigFunc = func(config *websocket.Config) {
+			config.Header.Set(TokenHeader, token)
+		}
+		return factory.NewTransport("paprika#" + mustRandomString())
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &Session{service}, nil
+}
+
+func (s *Session) NewBuildRequest(method string, args *data.BuildArgs) *BuildRequest {
+	return &BuildRequest{s.Service.NewRemoteCall(method, args)}
+}
+
+type BuildRequest struct {
+	*rpc.RemoteCall
+}
+
+func (request *BuildRequest) Execute() (result *data.BuildResult, err error) {
+	request.RemoteCall.GoExecute()
+	return request.Wait()
+}
+
+func (request *BuildRequest) Wait() (result *data.BuildResult, err error) {
+	err = request.RemoteCall.Wait()
+	if err != nil {
+		return
+	}
+
+	var res data.BuildResult
+	err = request.RemoteCall.UnmarshalReturnValue(&res)
+	if err != nil {
+		return
+	}
+
+	result = &res
+	return
+}
+
+func call(master, token, method string, args *data.BuildArgs) (*data.BuildResult, error) {
 	// Make sure all arguments are set.
 	var unset string
 	switch {
@@ -51,8 +101,6 @@ func call(master, token, method string, args interface{}, result *data.BuildResu
 		unset = "method"
 	case args == nil:
 		unset = "args"
-	case result == nil:
-		unset = "result"
 	}
 	if unset != "" {
 		panic(fmt.Errorf("call(): argument is empty: %v", unset))
@@ -60,19 +108,11 @@ func call(master, token, method string, args interface{}, result *data.BuildResu
 
 	// Create a Cider RPC client that uses WebSocket transport.
 	fmt.Printf("---> Connecting to %v\n", master)
-	client, err := rpc.NewService(func() (rpc.Transport, error) {
-		factory := ws.NewTransportFactory()
-		factory.Server = master
-		factory.Origin = "http://localhost"
-		factory.WSConfigFunc = func(config *websocket.Config) {
-			config.Header.Set(TokenHeader, token)
-		}
-		return factory.NewTransport("paprika#" + mustRandomString())
-	})
+	session, err := Dial(master, token)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	defer client.Close()
+	defer session.Close()
 
 	fmt.Printf("---> Sending the build request (using method %q)\n", method)
 
@@ -81,7 +121,7 @@ func call(master, token, method string, args interface{}, result *data.BuildResu
 	signal.Notify(signalCh, os.Interrupt)
 
 	// Configure the RPC call.
-	call := client.NewRemoteCall(method, args)
+	call := session.NewBuildRequest(method, args)
 	call.Stdout = os.Stdout
 	call.Stderr = os.Stderr
 
@@ -96,19 +136,19 @@ func call(master, token, method string, args interface{}, result *data.BuildResu
 	case <-signalCh:
 		fmt.Println("---> Interrupting the build job, this can take a few seconds")
 		if err := call.Interrupt(); err != nil {
-			return err
+			return nil, err
 		}
 	}
 	verbose("@{c}<<<@{|} Combined output\n")
-	if err := call.Wait(); err != nil {
-		return err
+	result, err := call.Wait()
+	if err != nil {
+		return nil, err
 	}
 
 	// Return the results.
 	verbose("@{c}>>>@{|} Return code:  ", call.ReturnCode(), "\n")
-	err = call.UnmarshalReturnValue(&result)
 	verbose("@{c}>>>@{|} Return value: ", result, "\n")
-	return err
+	return result, err
 }
 
 func mustRandomString() string {

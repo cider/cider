@@ -161,8 +161,7 @@ func triggerBuild(cmd *gocli.Command, argv []string) {
 	}
 
 	// Send the build request and stream the output to the console.
-	var result data.BuildResult
-	err = call(config.Master.URL, config.Master.Token, method, args, &result)
+	result, err := call(config.Master.URL, config.Master.Token, method, args)
 	if err != nil {
 		log.Fatalf("\nError: %v\n", err)
 	}

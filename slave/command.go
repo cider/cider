@@ -19,13 +19,19 @@ package slave
 
 import (
 	// Stdlib
+	"io"
 	"os"
+	"os/signal"
 	"runtime"
+	"syscall"
+	"time"
 
 	// Paprika
 	"github.com/paprikaci/paprika/utils"
 
 	// Others
+	"code.google.com/p/go.net/websocket"
+	log "github.com/cihub/seelog"
 	"github.com/tchap/gocli"
 )
 
@@ -84,6 +90,97 @@ func enslaveThisPoorMachine(cmd *gocli.Command, args []string) {
 	utils.Getenv(&labels, "PAPRIKA_SLAVE_LABELS")
 	utils.GetenvOrFailNow(&workspace, "PAPRIKA_SLAVE_WORKSPACE", cmd)
 
-	// Run the main function.
-	enslave()
+	// Set up logging.
+	var (
+		logger log.LoggerInterface
+		err    error
+	)
+	switch {
+	case verboseMode:
+		logger, err = log.LoggerFromConfigAsString(`<seelog minlevel="info"></seelog>`)
+	case debugMode:
+		logger, err = log.LoggerFromConfigAsString(`<seelog minlevel="trace"></seelog>`)
+	default:
+		logger, err = log.LoggerFromConfigAsString(`<seelog minlevel="warn"></seelog>`)
+	}
+	if err != nil {
+		panic(err)
+	}
+	if err := log.ReplaceLogger(logger); err != nil {
+		panic(err)
+	}
+
+	// Start the slave loop. This loop takes care of reconnecting to the master
+	// node once the slave is disconnected. It does exponential backoff.
+	var (
+		slave    *BuildSlave
+		backoff  = minBackoff
+		signalCh = make(chan os.Signal, 1)
+	)
+	signal.Notify(signalCh, os.Interrupt, syscall.SIGTERM)
+	for {
+		if slave != nil {
+			if err := slave.Terminate(); err != nil {
+				die(err)
+			}
+		}
+		slave = New(identity, workspace, executors)
+		go func() {
+			select {
+			case <-slave.Terminated():
+				return
+			case <-signalCh:
+				if err := slave.Terminate(); err != nil {
+					die(err)
+				}
+			}
+		}()
+
+		// Run the slave.
+		connectT := time.Now()
+		switch err := slave.Connect(master, token); {
+
+		// EOF means disconnect. That is fine, we will try to reconnect.
+		case err == io.EOF:
+
+		// Nil error means a clean termination, in which case we just return.
+		case err == nil:
+			if ex := slave.Terminate(); ex != nil {
+				die(ex)
+			}
+			return
+
+		default:
+			// Bad status is also not treated as a fatal error.
+			// The master can be being restarted, so we try to reconnect later.
+			if ex, ok := err.(*websocket.DialError); ok {
+				if ex.Err.Error() == "bad status" {
+					log.Warn(err)
+					break
+				}
+			}
+
+			// Other errors are fatal.
+			die(err)
+		}
+
+		// Reset the backoff in case we were connected for some time.
+		if time.Now().Sub(connectT) > maxBackoff {
+			backoff = minBackoff
+		}
+
+		// Do exponential backoff.
+		log.Infof("Waiting for %v before reconnecting...", backoff)
+		time.Sleep(backoff)
+		backoff = 2 * backoff
+		if backoff > maxBackoff {
+			backoff = maxBackoff
+		}
+	}
+}
+
+func die(err error) {
+	log.Critical(err)
+	log.Flush()
+	os.Exit(1)
 }

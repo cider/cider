@@ -57,7 +57,7 @@ func (wm *WorkspaceManager) EnsureWorkspaceExists(repoURL *url.URL) (ws string, 
 	// Generate the project workspace path from the global workspace and
 	// the repository URL so that the same repository names do not collide
 	// unless the whole repository URLs are the same.
-	ws = filepath.Join(wm.root, repoURL.Host, repoURL.Path)
+	ws = filepath.Join(wm.root, repoURL.Host, repoURL.Path, repoURL.Fragment)
 
 	// Make sure the project workspace exists.
 	err = ensureDirectoryExists(ws)
