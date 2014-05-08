@@ -61,6 +61,10 @@ thing to do is to run `paprika -h` and see what is printed.
 
 See the [demo repository](https://github.com/paprikaci/paprika-example).
 
+## Benchmarks ##
+
+See the `benchmark` subdirectory for more details.
+
 ## Discussion ##
 
 You can join the [mailing list](https://groups.google.com/forum/#!forum/paprikaci).
