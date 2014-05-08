@@ -1,23 +1,23 @@
 {
 	"ImportPath": "github.com/paprikaci/paprika",
-	"GoVersion": "go1.2",
+	"GoVersion": "go1.2.2",
 	"Deps": [
 		{
 			"ImportPath": "code.google.com/p/go.net/websocket",
-			"Comment": "null-119",
-			"Rev": "cdbc77c5e0064a55bdd9a6decd6e0d8f23c779ef"
+			"Comment": "null-126",
+			"Rev": "53130366067a9f0b47893ae8a81677391fdd0f42"
 		},
 		{
 			"ImportPath": "github.com/cider/cider/apps/utils/executil",
-			"Rev": "e7ae6191dfa81bd136bcd3a8ec5379d2eb51a01c"
+			"Rev": "57a839e08a5dd5dec4688f81b6ae497c66d99979"
 		},
 		{
 			"ImportPath": "github.com/cider/cider/apps/utils/vcsutil",
-			"Rev": "e7ae6191dfa81bd136bcd3a8ec5379d2eb51a01c"
+			"Rev": "57a839e08a5dd5dec4688f81b6ae497c66d99979"
 		},
 		{
 			"ImportPath": "github.com/cider/cider/broker",
-			"Rev": "e7ae6191dfa81bd136bcd3a8ec5379d2eb51a01c"
+			"Rev": "57a839e08a5dd5dec4688f81b6ae497c66d99979"
 		},
 		{
 			"ImportPath": "github.com/cider/go-cider/cider/services",

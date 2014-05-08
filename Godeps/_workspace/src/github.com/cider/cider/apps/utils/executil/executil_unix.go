@@ -10,6 +10,6 @@ package executil
 import "syscall"
 
 var (
-	termSignal = syscall.SIGTERM
-	killSignal = syscall.SIGKILL
+	sigterm = syscall.SIGTERM
+	sigkill = syscall.SIGKILL
 )

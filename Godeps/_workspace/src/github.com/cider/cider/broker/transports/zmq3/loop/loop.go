@@ -197,6 +197,11 @@ func (loop *MessageLoop) ListenAndServe() error {
 	for {
 		polled, err = poller.PollAll(-1)
 		if err != nil {
+			if err.Error() == "interrupted system call" {
+				log.Debug("zmq3: Received EINTR, but ignoring...")
+				continue
+			}
+			log.Critical("zmq3: Message loop crashed: %s", err)
 			break
 		}
 
@@ -259,14 +264,6 @@ func (loop *MessageLoop) ListenAndServe() error {
 		}
 	}
 
-	if err != nil {
-		if err.Error() == "interrupted system call" {
-			log.Debug("zmq3: Message loop interrupted")
-			err = nil
-		} else {
-			log.Critical("zmq3: Message loop crashed: %s", err)
-		}
-	}
 	return err
 }
 

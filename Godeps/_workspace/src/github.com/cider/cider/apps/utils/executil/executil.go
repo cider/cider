@@ -24,7 +24,7 @@ func Run(cmd *exec.Cmd, interrupted <-chan struct{}) error {
 	case err := <-errCh:
 		return err
 	case <-interrupted:
-		if err := cmd.Process.Signal(termSignal); err != nil {
+		if err := cmd.Process.Signal(sigterm); err != nil {
 			return err
 		}
 
@@ -32,7 +32,7 @@ func Run(cmd *exec.Cmd, interrupted <-chan struct{}) error {
 		case err := <-errCh:
 			return err
 		case <-time.After(5 * time.Second):
-			if err := cmd.Process.Signal(killSignal); err != nil {
+			if err := cmd.Process.Signal(sigkill); err != nil {
 				return err
 			}
 

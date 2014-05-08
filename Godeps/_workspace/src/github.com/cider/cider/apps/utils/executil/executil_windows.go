@@ -8,6 +8,6 @@ package executil
 import "os"
 
 var (
-	termSignal = os.Interrupt
-	killSignal = os.Kill
+	sigterm = os.Kill
+	sigkill = os.Kill
 )
