@@ -38,34 +38,30 @@ type Builder struct {
 	runner    *runners.Runner
 	manager   *WorkspaceManager
 	execQueue chan bool
-	dryRun    bool
-}
-
-func (builder *Builder) SetDryRun(dr bool) {
-	builder.dryRun = dr
 }
 
 func (builder *Builder) Build(request rpc.RemoteRequest) {
-	// Return immediately if this is a dry run.
-	if builder.dryRun {
-		request.Resolve(0, &data.BuildResult{})
-		return
-	}
-
-	// Some shortcuts.
-	stdout := request.Stdout()
-	stderr := request.Stderr()
-
 	// Unmarshal and validate the input data.
 	var args data.BuildArgs
 	if err := request.UnmarshalArgs(&args); err != nil {
 		request.Resolve(2, &data.BuildResult{Error: err.Error()})
 		return
 	}
+	// Return immediately if this is a dry run.
+	if args.Noop {
+		request.Resolve(0, &data.BuildResult{})
+		return
+	}
+
+	// Validate the arguments.
 	if err := args.Validate(); err != nil {
 		request.Resolve(3, &data.BuildResult{Error: err.Error()})
 		return
 	}
+
+	// Some shortcuts.
+	stdout := request.Stdout()
+	stderr := request.Stderr()
 
 	// Generate the project workspace and make sure it exists.
 	repoURL, _ := url.Parse(args.Repository)

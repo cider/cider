@@ -95,9 +95,6 @@ func benchmark(b *testing.B) {
 
 	// Run the build slave.
 	buildSlave := slave.New("Pepa", workspace, uint(runtime.NumCPU()))
-	if mode == modeNoop {
-		buildSlave.SetDryRun(true)
-	}
 	go buildSlave.Connect(connectAddress, token)
 	defer buildSlave.Terminate()
 
@@ -123,6 +120,9 @@ func benchmark(b *testing.B) {
 		args[i] = &data.BuildArgs{
 			Repository: repositoryBaseURL + "#b" + strconv.Itoa(i),
 			Script:     "build.sh",
+		}
+		if mode == modeNoop {
+			args[i].Noop = true
 		}
 	}
 
