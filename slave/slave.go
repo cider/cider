@@ -56,6 +56,7 @@ type BuildSlave struct {
 	identity     string
 	workspace    string
 	numExecutors uint
+	dryRun       bool
 	service      *rpc.Service
 	mu           *sync.Mutex
 }
@@ -67,6 +68,15 @@ func New(identity, workspace string, numExecutors uint) *BuildSlave {
 		numExecutors: numExecutors,
 		mu:           new(sync.Mutex),
 	}
+}
+
+func (slave *BuildSlave) SetDryRun(dr bool) {
+	slave.mu.Lock()
+	defer slave.mu.Unlock()
+	if slave.service != nil {
+		panic(ErrConnected)
+	}
+	slave.dryRun = dr
 }
 
 func (slave *BuildSlave) Connect(master, token string) (err error) {
@@ -116,7 +126,7 @@ func (slave *BuildSlave) Connect(master, token string) (err error) {
 	for _, label := range ls {
 		for _, runner := range runners.Available {
 			methodName := fmt.Sprintf("paprika.%v.%v", label, runner.Name)
-			builder := &Builder{runner, manager, execQueue}
+			builder := &Builder{runner, manager, execQueue, slave.dryRun}
 			if ex := service.RegisterMethod(methodName, builder.Build); ex != nil {
 				err = ex
 				goto Close

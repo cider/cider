@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"io"
 	"io/ioutil"
 	"log"
@@ -26,9 +27,29 @@ const (
 	token          = "bublifuk"
 )
 
+var (
+	numThreads int = 1
+	noop       bool
+)
+
 func main() {
 	log.SetFlags(0)
 	seelog.ReplaceLogger(seelog.Disabled)
+
+	flag.IntVar(&numThreads, "threads", numThreads, "number of OS threads to use")
+	flag.BoolVar(&noop, "noop", noop, "set the build slave do NOOP builds")
+
+	flag.Parse()
+
+	if noop {
+		log.Println("NOOP builds enabled")
+	}
+	if numThreads < 1 {
+		log.Fatalf("invalid -threads value: %v", numThreads)
+	}
+	log.Printf("Using %v thread(s)\n", numThreads)
+	runtime.GOMAXPROCS(numThreads)
+
 	res := testing.Benchmark(benchmark)
 	log.Println(res)
 	log.Printf("Total duration: %v\n", res.T)
@@ -44,10 +65,12 @@ func benchmark(b *testing.B) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	if err := initRepository(b, repository); err != nil {
-		log.Fatal(err)
+	if !noop {
+		if err := initRepository(b, repository); err != nil {
+			log.Fatal(err)
+		}
+		defer nuke(repository)
 	}
-	defer nuke(repository)
 
 	// Create a temporary workspace for the build slave.
 	workspace, err := ioutil.TempDir("", prefix)
@@ -63,6 +86,7 @@ func benchmark(b *testing.B) {
 
 	// Run the build slave.
 	buildSlave := slave.New("Pepa", workspace, uint(runtime.NumCPU()))
+	buildSlave.SetDryRun(noop)
 	go buildSlave.Connect(connectAddress, token)
 	defer buildSlave.Terminate()
 

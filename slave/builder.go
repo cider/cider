@@ -38,9 +38,20 @@ type Builder struct {
 	runner    *runners.Runner
 	manager   *WorkspaceManager
 	execQueue chan bool
+	dryRun    bool
+}
+
+func (builder *Builder) SetDryRun(dr bool) {
+	builder.dryRun = dr
 }
 
 func (builder *Builder) Build(request rpc.RemoteRequest) {
+	// Return immediately if this is a dry run.
+	if builder.dryRun {
+		request.Resolve(0, &data.BuildResult{})
+		return
+	}
+
 	// Some shortcuts.
 	stdout := request.Stdout()
 	stderr := request.Stderr()
