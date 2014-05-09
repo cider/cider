@@ -25,11 +25,15 @@ const (
 	listenAddress  = "localhost:8910"
 	connectAddress = "ws://" + listenAddress + "/connect"
 	token          = "bublifuk"
+
+	modeNoop      = "noop"
+	modeDiscard   = "discard"
+	modeStreaming = "streaming"
 )
 
 var (
-	numThreads int = 1
-	noop       bool
+	numThreads int    = 1
+	mode       string = "streaming"
 )
 
 func main() {
@@ -37,13 +41,18 @@ func main() {
 	seelog.ReplaceLogger(seelog.Disabled)
 
 	flag.IntVar(&numThreads, "threads", numThreads, "number of OS threads to use")
-	flag.BoolVar(&noop, "noop", noop, "set the build slave do NOOP builds")
-
+	flag.StringVar(&mode, "mode", mode, "benchmark mode; can be 'noop', 'discard' or 'streaming'")
 	flag.Parse()
 
-	if noop {
-		log.Println("NOOP builds enabled")
+	switch mode {
+	case modeNoop:
+	case modeDiscard:
+	case modeStreaming:
+	default:
+		log.Fatalf("unknown benchmark mode: %v", mode)
 	}
+	log.Printf("Benchmark mode: %v\n", mode)
+
 	if numThreads < 1 {
 		log.Fatalf("invalid -threads value: %v", numThreads)
 	}
@@ -65,7 +74,7 @@ func benchmark(b *testing.B) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	if !noop {
+	if mode != modeNoop {
 		if err := initRepository(b, repository); err != nil {
 			log.Fatal(err)
 		}
@@ -86,7 +95,9 @@ func benchmark(b *testing.B) {
 
 	// Run the build slave.
 	buildSlave := slave.New("Pepa", workspace, uint(runtime.NumCPU()))
-	buildSlave.SetDryRun(noop)
+	if mode == modeNoop {
+		buildSlave.SetDryRun(true)
+	}
 	go buildSlave.Connect(connectAddress, token)
 	defer buildSlave.Terminate()
 
@@ -119,6 +130,10 @@ func benchmark(b *testing.B) {
 	requests := make([]*build.BuildRequest, b.N)
 	for i := 0; i < b.N; i++ {
 		requests[i] = client.NewBuildRequest("paprika.any.bash", args[i])
+		if mode == modeStreaming {
+			// This makes Paprika stream the output, but discard it.
+			requests[i].Stdout = ioutil.Discard
+		}
 		requests[i].Stderr = os.Stderr
 	}
 

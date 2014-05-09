@@ -1,3 +1,5 @@
 #!/bin/bash
 
-echo "BYL JSEM TU! FANTOMAS"
+for i in $(seq 10000); do
+	echo "BYL JSEM TU! FANTOMAS"
+done

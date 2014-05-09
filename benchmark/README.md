@@ -14,47 +14,106 @@ The whole benchmark goes through the following steps:
 3. Start a build slave node and connect it to the master. This slave is set up
    to use `runtime.NumCPU()` executors.
 4. Fire `b.N` build jobs and wait for them to finish. Every job runs
-   `data/build.sh` in a standalone `bash` process.
+   `data/build.sh` in a standalone `bash` process. This script prints a string
+   to stdout using `echo` 10 000 times.
+
+The benchmark can be run in 3 modes, which affects what happens during the build:
+
+* `noop` - do not clone the repository, do not run any script, just return success
+* `discard` - clone the repository, run the script, but do not stream the output back
+* `streaming` - clone the repository, run the script and stream the output back
 
 ## Results ##
 
-Using MacBook Pro, 2.7 GHz Intel Core i7, 4 GB RAM, disk 5400 rpm:
+### Machine A ###
+
+MacBook Pro, 2.7 GHz Intel Core i7, 4 GB RAM, disk 5400 rpm:
+
+### Machine B ###
+
+iMac, 3.1 GHz Intel Core i5, 4 CPUs, 12 GB 1333MHz DDR3 RAM, disk 7200 rpm, running Mac OS X 10.8.5
+
+#### Single OS Thread ####
 
 ```
-$ go run main.go
-Using 1 thread(s)
-Starting a benchmark round, N=1
-Starting a benchmark round, N=20
-Starting a benchmark round, N=50
-      50	  35462621 ns/op
-Total duration: 1.773131095s
-```
-
-which is **35 ms/build**, or **28 builds/s**.
-
-Setting `GOMAXPROCS` to more than `1` does not make any apparent difference.
-
-### NOOP Builds ###
-
-Now setting the build slave to perform NOOP builds yields the following results.
-That actually means that only the communication framework is being measured.
-
-```
-$ go run main.go -noop
-NOOP builds enabled
+$ godep go run main.go -mode=noop
+Benchmark mode: noop
 Using 1 thread(s)
 Starting a benchmark round, N=1
 Starting a benchmark round, N=100
 Starting a benchmark round, N=10000
-   10000	    104065 ns/op
-Total duration: 1.040658241s
+      10000	    102475 ns/op
+Total duration: 1.024754911s
 ```
 
-which is **10 000 empty builds/s**.
+In other words, **10 000 builds/s**.
 
-### TODO ###
+```
+$ godep go run main.go -mode=discard
+Benchmark mode: discard
+Using 1 thread(s)
+Starting a benchmark round, N=1
+Starting a benchmark round, N=10
+Starting a benchmark round, N=20
+      20	  88243379 ns/op
+Total duration: 1.76486759s
+```
 
-* Try with builds that are generating a lot of live output.
+In other words, **11 builds/s** (88 ms/build).
+
+```
+$ godep go run main.go -mode=streaming
+Benchmark mode: streaming
+Using 1 thread(s)
+Starting a benchmark round, N=1
+Starting a benchmark round, N=10
+      10	 116437369 ns/op
+Total duration: 1.164373695s
+```
+
+In other words, **8 builds/s** (116 ms/build).
+
+#### Multiple OS Threads ####
+
+```
+$ godep go run main.go -threads=4 -mode=noop
+Benchmark mode: noop
+Using 4 thread(s)
+Starting a benchmark round, N=1
+Starting a benchmark round, N=100
+Starting a benchmark round, N=10000
+Starting a benchmark round, N=50000
+   50000	     47613 ns/op
+Total duration: 2.380661861s
+```
+
+In other words, **21 000 builds/s**.
+
+```
+$ godep go run main.go -threads=4 -mode=discard
+Benchmark mode: discard
+Using 4 thread(s)
+Starting a benchmark round, N=1
+Starting a benchmark round, N=10
+Starting a benchmark round, N=50
+      50	  59514214 ns/op
+Total duration: 2.975710744s
+```
+
+In other words, **17 builds/s** (59 ms/build).
+
+```
+$ godep go run main.go -threads=4 -mode=streaming
+Benchmark mode: streaming
+Using 4 thread(s)
+Starting a benchmark round, N=1
+Starting a benchmark round, N=10
+Starting a benchmark round, N=50
+      50	  65710241 ns/op
+Total duration: 3.285512054s
+```
+
+In other words, **15 builds/s** (65 ms/build).
 
 ## Conclusion ##
 
@@ -62,3 +121,6 @@ The communication framework itself imposes very little overhead compared to what
 it takes to actually clone the repository and run the build script. In real
 deployment Paprika would much faster run out of network bandwidth or the
 database where the builds output is being saved would become a bottleneck.
+
+Running the benchmark using **4 threads instead of 1** makes the system able to run
+up to **2 times more builds** per second.
