@@ -29,6 +29,8 @@ The benchmark can be run in 3 modes, which affects what happens during the build
 
 ## Results ##
 
+The console output is sometimes shortened not to take too much space.
+
 ### Machine A ###
 
 MacBook Pro, 4 CPUs, 2.7 GHz Intel Core i7, 4 GB RAM (1333 DDR3), disk 5400 rpm, running Mac OS X 10.7.5.
