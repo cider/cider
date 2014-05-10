@@ -19,7 +19,9 @@ package slave
 
 import (
 	// Stdlib
+	"bufio"
 	"fmt"
+	"io"
 	"net/url"
 	"os"
 	"time"
@@ -47,9 +49,9 @@ func (builder *Builder) Build(request rpc.RemoteRequest) {
 		request.Resolve(2, &data.BuildResult{Error: err.Error()})
 		return
 	}
-	// Return immediately if this is a dry run.
-	if args.Noop {
-		request.Resolve(0, &data.BuildResult{})
+	// Return immediately if this is a benchmark request.
+	if b := args.B; b != nil {
+		benchmark(b, request)
 		return
 	}
 
@@ -179,4 +181,16 @@ func resolve(req rpc.RemoteRequest, code rpc.ReturnCode, startT time.Time, pullT
 	}
 	result.WriteSummary(req.Stdout())
 	req.Resolve(code, result)
+}
+
+func benchmark(b *data.BenchmarkOptions, req rpc.RemoteRequest) {
+	if !b.RandomOutput {
+		req.Resolve(0, &data.BuildResult{})
+		return
+	}
+	stdout := bufio.NewWriter(req.Stdout())
+	for i := 0; i < 10000; i++ {
+		io.WriteString(stdout, "BYL JSEM TU! FANTOMAS")
+	}
+	req.Resolve(0, &data.BuildResult{})
 }

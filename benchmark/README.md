@@ -20,6 +20,8 @@ The whole benchmark goes through the following steps:
 The benchmark can be run in the following modes, which affects what happens during the build:
 
 * `noop` - do not clone the repository, do not run any script, just return success
+* `noop+streaming` - do not clone the repository, do not run any script, but
+  stream some non-trivial output back to the requester
 * `discard` - clone the repository, run the script, but do not stream the output back
 * `streaming` - clone the repository, run the script and stream the output back
 * `redis` - clone the repository, run the script, buffer the output, then save
@@ -62,6 +64,33 @@ Total duration: 1.176727186s
 Starting a benchmark round, N=10000
    10000	    119870 ns/op
 Total duration: 1.198708542s
+```
+
+```
+$ for i in $(seq 5); do ./benchmark -mode=noop+streaming; echo; done
+Benchmark mode: noop+streaming
+Using 1 thread(s)
+Starting a benchmark round, N=1
+Starting a benchmark round, N=100
+Starting a benchmark round, N=500
+     500	   5568584 ns/op
+Total duration: 2.784292029s
+
+Starting a benchmark round, N=500
+     500	   5656427 ns/op
+Total duration: 2.82821352s
+
+Starting a benchmark round, N=500
+     500	   5588431 ns/op
+Total duration: 2.79421595s
+
+Starting a benchmark round, N=500
+     500	   5683269 ns/op
+Total duration: 2.841634591s
+
+Starting a benchmark round, N=500
+     500	   5536331 ns/op
+Total duration: 2.768165825s
 ```
 
 ```
@@ -199,6 +228,33 @@ Total duration: 1.4591914s
 Starting a benchmark round, N=20000
    20000	     73456 ns/op
 Total duration: 1.469125557s
+```
+
+```
+$ for i in $(seq 5); do ./benchmark -mode=noop+streaming -threads=4; echo; done
+Benchmark mode: noop+streaming
+Using 4 thread(s)
+Starting a benchmark round, N=1
+Starting a benchmark round, N=100
+Starting a benchmark round, N=500
+     500	   3982016 ns/op
+Total duration: 1.991008089s
+
+Starting a benchmark round, N=500
+     500	   3989970 ns/op
+Total duration: 1.994985181s
+
+Starting a benchmark round, N=500
+     500	   4028983 ns/op
+Total duration: 2.014491699s
+
+Starting a benchmark round, N=500
+     500	   4000035 ns/op
+Total duration: 2.000017953s
+
+Starting a benchmark round, N=500
+     500	   3987918 ns/op
+Total duration: 1.993959126s
 ```
 
 ```

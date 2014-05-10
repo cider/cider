@@ -57,10 +57,14 @@ func ParseArgs(slave, repository, script, runner string, env []string) (method s
 }
 
 type BuildArgs struct {
-	Repository string   `codec:"repository"`
-	Script     string   `codec:"script"`
-	Env        []string `codec:"env,omitempty"`
-	Noop       bool     `codec:"noop,omitempty"` // For benchmarking purposes only.
+	Repository string            `codec:"repository"`
+	Script     string            `codec:"script"`
+	Env        []string          `codec:"env,omitempty"`
+	B          *BenchmarkOptions `codec:"benchmark"`
+}
+
+type BenchmarkOptions struct {
+	RandomOutput bool `codec:"random_output,omitempty"`
 }
 
 func (args *BuildArgs) Validate() error {

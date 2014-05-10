@@ -29,11 +29,12 @@ const (
 	connectAddress = "ws://" + listenAddress + "/connect"
 	token          = "bublifuk"
 
-	modeNoop      = "noop"
-	modeDiscard   = "discard"
-	modeStreaming = "streaming"
-	modeRedis     = "redis"
-	modeFiles     = "files"
+	modeNoop          = "noop"
+	modeNoopStreaming = "noop+streaming"
+	modeDiscard       = "discard"
+	modeStreaming     = "streaming"
+	modeRedis         = "redis"
+	modeFiles         = "files"
 )
 
 var (
@@ -47,12 +48,14 @@ func main() {
 	seelog.ReplaceLogger(seelog.Disabled)
 
 	flag.IntVar(&numThreads, "threads", numThreads, "number of OS threads to use")
-	flag.StringVar(&mode, "mode", mode, "benchmark mode; (noop|discard|streaming|redis|files)")
+	flag.StringVar(&mode, "mode", mode,
+		"benchmark mode; (noop|noop+streaming|discard|streaming|redis|files)")
 	flag.StringVar(&redisAddr, "redis_addr", redisAddr, "Redis address")
 	flag.Parse()
 
 	switch mode {
 	case modeNoop:
+	case modeNoopStreaming:
 	case modeDiscard:
 	case modeStreaming:
 	case modeRedis:
@@ -106,7 +109,7 @@ func benchmark(b *testing.B) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	if mode != modeNoop {
+	if mode != modeNoop && mode != modeNoopStreaming {
 		if err := initRepository(b, repository); err != nil {
 			log.Fatal(err)
 		}
@@ -165,7 +168,12 @@ func benchmark(b *testing.B) {
 			var stdout io.Writer
 			switch mode {
 			case modeNoop:
-				args.Noop = true
+				args.B = &data.BenchmarkOptions{}
+			case modeNoopStreaming:
+				stdout = ioutil.Discard
+				args.B = &data.BenchmarkOptions{
+					RandomOutput: true,
+				}
 			case modeStreaming:
 				// This makes Paprika stream the output, but then it is discarded
 				// by the client library since the writer points to /dev/null.
