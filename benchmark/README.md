@@ -24,6 +24,8 @@ The benchmark can be run in 3 modes, which affects what happens during the build
 * `streaming` - clone the repository, run the script and stream the output back
 * `redis` - clone the repository, run the script, buffer the output, then save
   it into Redis (see `-redis_addr` to configure this mode)
+* `files` - clone the repository, run the script, buffer the output, then save
+  in into a plan file on the disk
 
 ## Results ##
 
@@ -199,6 +201,46 @@ Starting a benchmark round, N=10
 Starting a benchmark round, N=50
       50	  56668844 ns/op
 Total duration: 2.833442247s
+```
+
+```
+$ for i in $(seq 5); do ./benchmark -mode=files; echo; done
+Benchmark mode: files
+Using 1 thread(s)
+Starting a benchmark round, N=1
+Starting a benchmark round, N=10
+      10	 105338329 ns/op
+Total duration: 1.053383292s
+
+Benchmark mode: files
+Using 1 thread(s)
+Starting a benchmark round, N=1
+Starting a benchmark round, N=10
+      10	 118421312 ns/op
+Total duration: 1.184213129s
+
+Benchmark mode: files
+Using 1 thread(s)
+Starting a benchmark round, N=1
+Starting a benchmark round, N=10
+Starting a benchmark round, N=50
+      50	  59483523 ns/op
+Total duration: 2.974176176s
+
+Benchmark mode: files
+Using 1 thread(s)
+Starting a benchmark round, N=1
+Starting a benchmark round, N=10
+Starting a benchmark round, N=50
+      50	  64875806 ns/op
+Total duration: 3.243790346s
+
+Benchmark mode: files
+Using 1 thread(s)
+Starting a benchmark round, N=1
+Starting a benchmark round, N=10
+      10	 120911117 ns/op
+Total duration: 1.209111176s
 ```
 
 #### Multiple OS Threads ####
@@ -378,6 +420,46 @@ Starting a benchmark round, N=10
 Starting a benchmark round, N=50
       50	  68735020 ns/op
 Total duration: 3.436751014s
+```
+
+```
+$ for i in $(seq 5); do ./benchmark -mode=files -threads=4; echo; done
+Benchmark mode: files
+Using 4 thread(s)
+Starting a benchmark round, N=1
+Starting a benchmark round, N=10
+      10	 106588232 ns/op
+Total duration: 1.065882329s
+
+Benchmark mode: files
+Using 4 thread(s)
+Starting a benchmark round, N=1
+Starting a benchmark round, N=20
+      20	  91778911 ns/op
+Total duration: 1.83557823s
+
+Benchmark mode: files
+Using 4 thread(s)
+Starting a benchmark round, N=1
+Starting a benchmark round, N=10
+Starting a benchmark round, N=20
+      20	  70745534 ns/op
+Total duration: 1.414910694s
+
+Benchmark mode: files
+Using 4 thread(s)
+Starting a benchmark round, N=1
+Starting a benchmark round, N=10
+Starting a benchmark round, N=20
+      20	  92100082 ns/op
+Total duration: 1.842001646s
+
+Benchmark mode: files
+Using 4 thread(s)
+Starting a benchmark round, N=1
+Starting a benchmark round, N=10
+      10	 141744087 ns/op
+Total duration: 1.41744087s
 ```
 
 ### Machine B ###
