@@ -25,7 +25,7 @@ The benchmark can be run in 3 modes, which affects what happens during the build
 * `redis` - clone the repository, run the script, buffer the output, then save
   it into Redis (see `-redis_addr` to configure this mode)
 * `files` - clone the repository, run the script, buffer the output, then save
-  in into a plan file on the disk
+  in into a file on the disk
 
 ## Results ##
 
