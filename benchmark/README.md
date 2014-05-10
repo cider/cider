@@ -267,25 +267,18 @@ Starting a benchmark round, N=50
       50	  60953392 ns/op
 Total duration: 3.047669632s
 
-Using 4 thread(s)
 Starting a benchmark round, N=50
       50	  74873721 ns/op
 Total duration: 3.743686079s
 
-Benchmark mode: discard
-Using 4 thread(s)
 Starting a benchmark round, N=50
       50	  80092564 ns/op
 Total duration: 4.004628243s
 
-Benchmark mode: discard
-Using 4 thread(s)
 Starting a benchmark round, N=20
       20	  68473920 ns/op
 Total duration: 1.369478414s
 
-Benchmark mode: discard
-Using 4 thread(s)
 Starting a benchmark round, N=20
       20	  61124403 ns/op
 Total duration: 1.222488079s
@@ -301,26 +294,18 @@ Starting a benchmark round, N=20
       20	  89590665 ns/op
 Total duration: 1.791813309s
 
-Benchmark mode: streaming
-Using 4 thread(s)
 Starting a benchmark round, N=50
       50	  62025025 ns/op
 Total duration: 3.101251279s
 
-Benchmark mode: streaming
-Using 4 thread(s)
 Starting a benchmark round, N=50
       50	  65817256 ns/op
 Total duration: 3.290862834s
 
-Benchmark mode: streaming
-Using 4 thread(s)
 Starting a benchmark round, N=50
       50	  73712222 ns/op
 Total duration: 3.68561113s
 
-Benchmark mode: streaming
-Using 4 thread(s)
 Starting a benchmark round, N=20
       20	  90325548 ns/op
 Total duration: 1.806510968s
