@@ -17,7 +17,7 @@ The whole benchmark goes through the following steps:
 4. Fire `b.N` build jobs and wait for them to finish. Every job runs the build
    script in a standalone `bash` process.
 
-The benchmark can be run in 3 modes, which affects what happens during the build:
+The benchmark can be run in the following modes, which affects what happens during the build:
 
 * `noop` - do not clone the repository, do not run any script, just return success
 * `discard` - clone the repository, run the script, but do not stream the output back
