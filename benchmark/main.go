@@ -33,6 +33,7 @@ const (
 	modeDiscard   = "discard"
 	modeStreaming = "streaming"
 	modeRedis     = "redis"
+	modeFiles     = "files"
 )
 
 var (
@@ -46,7 +47,7 @@ func main() {
 	seelog.ReplaceLogger(seelog.Disabled)
 
 	flag.IntVar(&numThreads, "threads", numThreads, "number of OS threads to use")
-	flag.StringVar(&mode, "mode", mode, "benchmark mode; (noop|discard|streaming|redis)")
+	flag.StringVar(&mode, "mode", mode, "benchmark mode; (noop|discard|streaming|redis|files)")
 	flag.StringVar(&redisAddr, "redis_addr", redisAddr, "Redis address")
 	flag.Parse()
 
@@ -55,6 +56,7 @@ func main() {
 	case modeDiscard:
 	case modeStreaming:
 	case modeRedis:
+	case modeFiles:
 	default:
 		log.Fatalf("unknown benchmark mode: %v", mode)
 	}
@@ -87,6 +89,16 @@ func benchmark(b *testing.B) {
 			log.Fatal(err)
 		}
 		defer pool.Close()
+	}
+
+	// Set up a tmp directory for output files.
+	var outputDir string
+	if mode == modeFiles {
+		outputDir, err = ioutil.TempDir("", prefix)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer nuke(outputDir)
 	}
 
 	// Create a temporary project directory to be cloned.
@@ -159,6 +171,8 @@ func benchmark(b *testing.B) {
 				// by the client library since the writer points to /dev/null.
 				stdout = ioutil.Discard
 			case modeRedis:
+				fallthrough
+			case modeFiles:
 				stdout = new(bytes.Buffer)
 			}
 			req.Stdout = stdout
@@ -172,10 +186,17 @@ func benchmark(b *testing.B) {
 				log.Println(res.Error)
 			}
 
-			if mode == modeRedis {
+			switch mode {
+			case modeRedis:
 				conn := pool.Get()
 				defer conn.Close()
 				_, err := conn.Do("SET", index, stdout.(*bytes.Buffer).Bytes())
+				if err != nil {
+					log.Println(err)
+				}
+			case modeFiles:
+				path := filepath.Join(outputDir, strconv.Itoa(index))
+				err := ioutil.WriteFile(path, stdout.(*bytes.Buffer).Bytes(), 0644)
 				if err != nil {
 					log.Println(err)
 				}
