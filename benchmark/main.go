@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"io"
 	"io/ioutil"
@@ -10,6 +11,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
+	"sync"
 	"testing"
 	"time"
 
@@ -19,6 +21,7 @@ import (
 	"github.com/paprikaci/paprika/slave"
 
 	"github.com/cihub/seelog"
+	"github.com/garyburd/redigo/redis"
 )
 
 const (
@@ -29,11 +32,13 @@ const (
 	modeNoop      = "noop"
 	modeDiscard   = "discard"
 	modeStreaming = "streaming"
+	modeRedis     = "redis"
 )
 
 var (
 	numThreads int    = 1
 	mode       string = "streaming"
+	redisAddr  string = "localhost:6379"
 )
 
 func main() {
@@ -41,13 +46,15 @@ func main() {
 	seelog.ReplaceLogger(seelog.Disabled)
 
 	flag.IntVar(&numThreads, "threads", numThreads, "number of OS threads to use")
-	flag.StringVar(&mode, "mode", mode, "benchmark mode; can be 'noop', 'discard' or 'streaming'")
+	flag.StringVar(&mode, "mode", mode, "benchmark mode; (noop|discard|streaming|redis)")
+	flag.StringVar(&redisAddr, "redis_addr", redisAddr, "Redis address")
 	flag.Parse()
 
 	switch mode {
 	case modeNoop:
 	case modeDiscard:
 	case modeStreaming:
+	case modeRedis:
 	default:
 		log.Fatalf("unknown benchmark mode: %v", mode)
 	}
@@ -68,6 +75,19 @@ func benchmark(b *testing.B) {
 	const prefix = "paprika-benchmark"
 
 	log.Printf("Starting a benchmark round, N=%v\n", b.N)
+
+	// Set up Redis if necessary.
+	var (
+		pool *redis.Pool
+		err  error
+	)
+	if mode == modeRedis {
+		pool, err = initRedis(b)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer pool.Close()
+	}
 
 	// Create a temporary project directory to be cloned.
 	repository, err := ioutil.TempDir("", prefix)
@@ -100,7 +120,7 @@ func benchmark(b *testing.B) {
 
 	// Wait a bit for the things to bind.
 	time.Sleep(time.Second)
-	// Check here if there are already any errors.
+	// Check for errors here already, just in case.
 	select {
 	case <-buildMaster.Terminated():
 		log.Fatal(buildMaster.Wait())
@@ -109,50 +129,61 @@ func benchmark(b *testing.B) {
 	default:
 	}
 
-	// Prepare the build args.
+	// Connect the build client to the build master.
 	client, err := build.Dial(connectAddress, token)
 	if err != nil {
 		log.Fatal(err)
 	}
-	repositoryBaseURL := "git+file://" + repository
-	args := make([]*data.BuildArgs, b.N)
-	for i := 0; i < b.N; i++ {
-		args[i] = &data.BuildArgs{
-			Repository: repositoryBaseURL + "#b" + strconv.Itoa(i),
-			Script:     "build.sh",
-		}
-		if mode == modeNoop {
-			args[i].Noop = true
-		}
-	}
 
-	// Prepare the build requests.
-	requests := make([]*build.BuildRequest, b.N)
-	for i := 0; i < b.N; i++ {
-		requests[i] = client.NewBuildRequest("paprika.any.bash", args[i])
-		if mode == modeStreaming {
-			// This makes Paprika stream the output, but discard it.
-			requests[i].Stdout = ioutil.Discard
-		}
-		requests[i].Stderr = os.Stderr
-	}
-
-	// Fire all the requests at once, awwwww.
+	// Run b.N goroutines, each firing one request.
+	var wg sync.WaitGroup
+	wg.Add(b.N)
 	b.ResetTimer()
+	repositoryBaseURL := "git+file://" + repository
 	for i := 0; i < b.N; i++ {
-		requests[i].GoExecute()
+		go func(index int) {
+			defer wg.Done()
+			args := &data.BuildArgs{
+				Repository: repositoryBaseURL + "#b" + strconv.Itoa(index),
+				Script:     "build.sh",
+			}
+			req := client.NewBuildRequest("paprika.any.bash", args)
+			req.Stderr = os.Stderr
+
+			var stdout io.Writer
+			switch mode {
+			case modeNoop:
+				args.Noop = true
+			case modeStreaming:
+				// This makes Paprika stream the output, but then it is discarded
+				// by the client library since the writer points to /dev/null.
+				stdout = ioutil.Discard
+			case modeRedis:
+				stdout = new(bytes.Buffer)
+			}
+			req.Stdout = stdout
+
+			res, err := req.Execute()
+			if err != nil {
+				log.Println(err)
+				return
+			}
+			if res.Error != "" {
+				log.Println(res.Error)
+			}
+
+			if mode == modeRedis {
+				conn := pool.Get()
+				defer conn.Close()
+				_, err := conn.Do("SET", index, stdout.(*bytes.Buffer).Bytes())
+				if err != nil {
+					log.Println(err)
+				}
+			}
+		}(i)
 	}
 
-	// Wait for all the requests.
-	for i := 0; i < b.N; i++ {
-		result, err := requests[i].Wait()
-		if err != nil {
-			log.Println(err)
-		}
-		if result.Error != "" {
-			log.Println(result.Error)
-		}
-	}
+	wg.Wait()
 	b.StopTimer()
 }
 
@@ -169,18 +200,7 @@ func initRepository(b *testing.B, path string) error {
 		return err
 	}
 
-	src, err := os.Open("data/build.sh")
-	if err != nil {
-		return err
-	}
-	defer src.Close()
-	dst, err := os.Create(filepath.Join(path, "build.sh"))
-	if err != nil {
-		return err
-	}
-	defer dst.Close()
-	_, err = io.Copy(dst, src)
-	if err != nil {
+	if err := writeBuildScript(filepath.Join(path, "build.sh")); err != nil {
 		return err
 	}
 
@@ -202,6 +222,45 @@ func initRepository(b *testing.B, path string) error {
 		if err := cmd.Run(); err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func initRedis(b *testing.B) (*redis.Pool, error) {
+	pool := redis.NewPool(func() (redis.Conn, error) {
+		return redis.Dial("tcp", redisAddr)
+	}, b.N)
+
+	for i := 0; i < b.N; i++ {
+		conn := pool.Get()
+		defer conn.Close()
+		if _, err := conn.Do("SET", i, 0); err != nil {
+			return nil, err
+		}
+	}
+
+	return pool, nil
+}
+
+func writeBuildScript(path string) error {
+	dst, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer dst.Close()
+
+	if _, err := io.WriteString(dst, "for i in $(seq 10); do cat <<-EOF\n"); err != nil {
+		return err
+	}
+
+	for i := 0; i < 1000; i++ {
+		if _, err := io.WriteString(dst, "BYL JSEM TU! FANTOMAS\n"); err != nil {
+			return err
+		}
+	}
+
+	if _, err := io.WriteString(dst, "EOF\ndone\n"); err != nil {
+		return err
 	}
 	return nil
 }
