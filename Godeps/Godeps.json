@@ -1,6 +1,9 @@
 {
 	"ImportPath": "github.com/paprikaci/paprika",
 	"GoVersion": "go1.2.2",
+	"Packages": [
+		"./..."
+	],
 	"Deps": [
 		{
 			"ImportPath": "code.google.com/p/go.net/websocket",
@@ -35,6 +38,10 @@
 			"ImportPath": "github.com/cihub/seelog",
 			"Comment": "go1.1-4-g6916c12",
 			"Rev": "6916c1271534ee68a12381356a0555075f6a6d76"
+		},
+		{
+			"ImportPath": "github.com/garyburd/redigo/redis",
+			"Rev": "07c882cb0b99d26838726bf7cdf43ba03fe6c04f"
 		},
 		{
 			"ImportPath": "github.com/tchap/go-websocket-frames/frames",
