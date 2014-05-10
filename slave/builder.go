@@ -190,7 +190,8 @@ func benchmark(b *data.BenchmarkOptions, req rpc.RemoteRequest) {
 	}
 	stdout := bufio.NewWriter(req.Stdout())
 	for i := 0; i < 10000; i++ {
-		io.WriteString(stdout, "BYL JSEM TU! FANTOMAS")
+		io.WriteString(stdout, "BYL JSEM TU! FANTOMAS\n")
 	}
+	stdout.Flush()
 	req.Resolve(0, &data.BuildResult{})
 }
