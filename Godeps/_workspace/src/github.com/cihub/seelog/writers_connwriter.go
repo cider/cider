@@ -25,6 +25,7 @@
 package seelog
 
 import (
+	"crypto/tls"
 	"fmt"
 	"io"
 	"net"
@@ -34,9 +35,11 @@ import (
 type connWriter struct {
 	innerWriter    io.WriteCloser
 	reconnectOnMsg bool
-	recconect      bool
+	reconnect      bool
 	net            string
 	addr           string
+	useTLS         bool
+	configTLS      *tls.Config
 }
 
 // Creates writer to the address addr on the network netName.
@@ -51,6 +54,19 @@ func newConnWriter(netName string, addr string, reconnectOnMsg bool) *connWriter
 	return newWriter
 }
 
+// Creates a writer that uses SSL/TLS
+func newTLSWriter(netName string, addr string, reconnectOnMsg bool, config *tls.Config) *connWriter {
+	newWriter := new(connWriter)
+
+	newWriter.net = netName
+	newWriter.addr = addr
+	newWriter.reconnectOnMsg = reconnectOnMsg
+	newWriter.useTLS = true
+	newWriter.configTLS = config
+
+	return newWriter
+}
+
 func (connWriter *connWriter) Close() error {
 	if connWriter.innerWriter == nil {
 		return nil
@@ -60,7 +76,7 @@ func (connWriter *connWriter) Close() error {
 }
 
 func (connWriter *connWriter) Write(bytes []byte) (n int, err error) {
-	if connWriter.neddedConnectOnMsg() {
+	if connWriter.neededConnectOnMsg() {
 		err = connWriter.connect()
 		if err != nil {
 			return 0, err
@@ -73,7 +89,7 @@ func (connWriter *connWriter) Write(bytes []byte) (n int, err error) {
 
 	n, err = connWriter.innerWriter.Write(bytes)
 	if err != nil {
-		connWriter.recconect = true
+		connWriter.reconnect = true
 	}
 
 	return
@@ -87,6 +103,16 @@ func (connWriter *connWriter) connect() error {
 	if connWriter.innerWriter != nil {
 		connWriter.innerWriter.Close()
 		connWriter.innerWriter = nil
+	}
+
+	if connWriter.useTLS {
+		conn, err := tls.Dial(connWriter.net, connWriter.addr, connWriter.configTLS)
+		if err != nil {
+			return err
+		}
+		connWriter.innerWriter = conn
+
+		return nil
 	}
 
 	conn, err := net.Dial(connWriter.net, connWriter.addr)
@@ -104,9 +130,9 @@ func (connWriter *connWriter) connect() error {
 	return nil
 }
 
-func (connWriter *connWriter) neddedConnectOnMsg() bool {
-	if connWriter.recconect {
-		connWriter.recconect = false
+func (connWriter *connWriter) neededConnectOnMsg() bool {
+	if connWriter.reconnect {
+		connWriter.reconnect = false
 		return true
 	}
 

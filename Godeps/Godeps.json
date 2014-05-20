@@ -1,5 +1,5 @@
 {
-	"ImportPath": "github.com/paprikaci/paprika",
+	"ImportPath": "github.com/cider/cider",
 	"GoVersion": "go1.2.2",
 	"Packages": [
 		"./..."
@@ -7,41 +7,41 @@
 	"Deps": [
 		{
 			"ImportPath": "code.google.com/p/go.net/websocket",
-			"Comment": "null-126",
-			"Rev": "53130366067a9f0b47893ae8a81677391fdd0f42"
-		},
-		{
-			"ImportPath": "github.com/cider/cider/apps/utils/executil",
-			"Rev": "57a839e08a5dd5dec4688f81b6ae497c66d99979"
-		},
-		{
-			"ImportPath": "github.com/cider/cider/apps/utils/vcsutil",
-			"Rev": "57a839e08a5dd5dec4688f81b6ae497c66d99979"
-		},
-		{
-			"ImportPath": "github.com/cider/cider/broker",
-			"Rev": "57a839e08a5dd5dec4688f81b6ae497c66d99979"
-		},
-		{
-			"ImportPath": "github.com/cider/go-cider/cider/services",
-			"Rev": "eee8f7e9d3b5f2feba2839ec0fb774b3a5c19aa8"
-		},
-		{
-			"ImportPath": "github.com/cider/go-cider/cider/transports/websocket/rpc",
-			"Rev": "eee8f7e9d3b5f2feba2839ec0fb774b3a5c19aa8"
-		},
-		{
-			"ImportPath": "github.com/cider/go-cider/cider/utils/codecs",
-			"Rev": "eee8f7e9d3b5f2feba2839ec0fb774b3a5c19aa8"
+			"Comment": "null-128",
+			"Rev": "9c33002573cb03309e20978369b0536f4f00b24d"
 		},
 		{
 			"ImportPath": "github.com/cihub/seelog",
-			"Comment": "go1.1-4-g6916c12",
-			"Rev": "6916c1271534ee68a12381356a0555075f6a6d76"
+			"Comment": "go1.1-11-g2b0831a",
+			"Rev": "2b0831a55e91f154f464c9d416ec814b100cf71a"
 		},
 		{
 			"ImportPath": "github.com/garyburd/redigo/redis",
-			"Rev": "07c882cb0b99d26838726bf7cdf43ba03fe6c04f"
+			"Rev": "1856a87f5528bfd8caea03f69a69d8443bc432ed"
+		},
+		{
+			"ImportPath": "github.com/meeko/go-meeko/meeko/services",
+			"Rev": "cc3771093cd973f26d1b7e53b01605da035055f0"
+		},
+		{
+			"ImportPath": "github.com/meeko/go-meeko/meeko/transports/websocket/rpc",
+			"Rev": "cc3771093cd973f26d1b7e53b01605da035055f0"
+		},
+		{
+			"ImportPath": "github.com/meeko/go-meeko/meeko/utils/codecs",
+			"Rev": "cc3771093cd973f26d1b7e53b01605da035055f0"
+		},
+		{
+			"ImportPath": "github.com/meeko/meekod/broker",
+			"Rev": "0f3781064508b806220ddb5a43cf964de3e54bc0"
+		},
+		{
+			"ImportPath": "github.com/meeko/meekod/supervisor/utils/executil",
+			"Rev": "0f3781064508b806220ddb5a43cf964de3e54bc0"
+		},
+		{
+			"ImportPath": "github.com/meeko/meekod/supervisor/utils/vcsutil",
+			"Rev": "0f3781064508b806220ddb5a43cf964de3e54bc0"
 		},
 		{
 			"ImportPath": "github.com/tchap/go-websocket-frames/frames",
@@ -57,12 +57,11 @@
 		},
 		{
 			"ImportPath": "github.com/wsxiaoys/terminal/color",
-			"Rev": "a83cd00f6d7acf3554bc24f06d7f9e48a90d0a47"
+			"Rev": "9dcaf1d63119a8ac00eef82270eaef08b6aa2328"
 		},
 		{
-			"ImportPath": "launchpad.net/goyaml",
-			"Comment": "51",
-			"Rev": "gustavo@niemeyer.net-20140305200416-7gh64vkcckre5mob"
+			"ImportPath": "gopkg.in/yaml.v1",
+			"Rev": "b0c168ac0cf9493da1f9bb76c34b26ffef940b4a"
 		}
 	]
 }
