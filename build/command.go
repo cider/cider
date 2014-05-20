@@ -1,19 +1,19 @@
 // Copyright (c) 2014 The AUTHORS
 //
-// This file is part of paprika.
+// This file is part of cider.
 //
-// paprika is free software: you can redistribute it and/or modify
+// cider is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// paprika is distributed in the hope that it will be useful,
+// cider is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with paprika.  If not, see <http://www.gnu.org/licenses/>.
+// along with cider.  If not, see <http://www.gnu.org/licenses/>.
 
 package build
 
@@ -23,8 +23,8 @@ import (
 	"log"
 	"os"
 
-	// Paprika
-	"github.com/paprikaci/paprika/data"
+	// Cider
+	"github.com/cider/cider/data"
 
 	// Others
 	"github.com/cihub/seelog"
@@ -58,22 +58,22 @@ var Command = &gocli.Command{
   within REPO. RUNNER program is used to run the script.
 
   Example:
-    $ paprika build -master wss://paprika.example.com/build -token=12345
-                    -slave macosx -runner bash
-                    -repository git+ssh://github.com/foo/bar.git#develop
-                    -script scripts/build -env ENVIRONMENT=testing -env DEBUG=y
+    $ cider build -master wss://cider.example.com:443/build -token=12345
+                  -slave macosx -runner bash
+                  -repository git+ssh://github.com/foo/bar.git#develop
+                  -script scripts/build -env ENVIRONMENT=testing -env DEBUG=y
 
   ENVIRONMENT:
     The following environment variables can be used instead of the relevant
     command line flags. The flags have higher priority, though.
 
-      PAPRIKA_MASTER_URL
-      PAPRIKA_MASTER_TOKEN
-      PAPRIKA_SLAVE_LABEL
-      PAPRIKA_REPOSITORY_URL
-      PAPRIKA_SCRIPT_PATH
-      PAPRIKA_SCRIPT_RUNNER
-      PAPRIKA_SCRIPT_ENV_<KEY> - equivalent to -env KEY=...
+      CIDER_MASTER_URL
+      CIDER_MASTER_TOKEN
+      CIDER_SLAVE_LABEL
+      CIDER_REPOSITORY_URL
+      CIDER_SCRIPT_PATH
+      CIDER_SCRIPT_RUNNER
+      CIDER_SCRIPT_ENV_<KEY> - equivalent to -env KEY=...
 	`,
 	Action: triggerBuild,
 }
@@ -117,7 +117,7 @@ func triggerBuild(cmd *gocli.Command, argv []string) {
 	}
 
 	// Update the config from environment variables.
-	if err := config.FeedFromEnv("PAPRIKA"); err != nil {
+	if err := config.FeedFromEnv("CIDER"); err != nil {
 		log.Fatalf("\nError: %v\n", err)
 	}
 

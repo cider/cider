@@ -1,19 +1,19 @@
 // Copyright (c) 2014 The AUTHORS
 //
-// This file is part of paprika.
+// This file is part of cider.
 //
-// paprika is free software: you can redistribute it and/or modify
+// cider is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// paprika is distributed in the hope that it will be useful,
+// cider is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with paprika.  If not, see <http://www.gnu.org/licenses/>.
+// along with cider.  If not, see <http://www.gnu.org/licenses/>.
 
 package master
 
@@ -25,11 +25,11 @@ import (
 	"syscall"
 	"time"
 
-	// Paprika
-	"github.com/paprikaci/paprika/utils"
+	// Cider
+	"github.com/cider/cider/utils"
 
 	// Cider
-	clog "github.com/cider/cider/broker/log"
+	clog "github.com/meeko/meekod/broker/log"
 
 	// Others
 	"github.com/cihub/seelog"
@@ -56,8 +56,8 @@ var Command = &gocli.Command{
   responding.
 
 ENVIRONMENT:
-  PAPRIKA_MASTER_LISTEN - can be used instead of -listen
-  PAPRIKA_MASTER_TOKEN  - can be used instead of -token
+  CIDER_MASTER_LISTEN - can be used instead of -listen
+  CIDER_MASTER_TOKEN  - can be used instead of -token
 	`,
 	Action: run,
 }
@@ -80,8 +80,8 @@ func run(cmd *gocli.Command, args []string) {
 	}
 
 	// Read the environment to fill in the missing parameters.
-	utils.GetenvOrFailNow(&listen, "PAPRIKA_MASTER_LISTEN", cmd)
-	utils.GetenvOrFailNow(&token, "PAPRIKA_MASTER_TOKEN", cmd)
+	utils.GetenvOrFailNow(&listen, "CIDER_MASTER_LISTEN", cmd)
+	utils.GetenvOrFailNow(&token, "CIDER_MASTER_TOKEN", cmd)
 
 	// Start catching signals.
 	signalCh := make(chan os.Signal, 1)
@@ -89,7 +89,7 @@ func run(cmd *gocli.Command, args []string) {
 
 	// Start listening for slave connections.
 	m := New(listen, token).EnableHeartbeat(heartbeat).Listen()
-	log.Printf("Paprika broker listening on %v\n", listen)
+	log.Printf("Cider broker listening on %v\n", listen)
 
 	select {
 	// Wait for a signal, then terminate the master in a clean way.

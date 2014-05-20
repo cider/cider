@@ -1,19 +1,19 @@
 // Copyright (c) 2014 The AUTHORS
 //
-// This file is part of paprika.
+// This file is part of cider.
 //
-// paprika is free software: you can redistribute it and/or modify
+// cider is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// paprika is distributed in the hope that it will be useful,
+// cider is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with paprika.  If not, see <http://www.gnu.org/licenses/>.
+// along with cider.  If not, see <http://www.gnu.org/licenses/>.
 
 package slave
 
@@ -26,8 +26,8 @@ import (
 	"syscall"
 	"time"
 
-	// Paprika
-	"github.com/paprikaci/paprika/utils"
+	// Cider
+	"github.com/cider/cider/utils"
 
 	// Others
 	"code.google.com/p/go.net/websocket"
@@ -55,11 +55,11 @@ var Command = &gocli.Command{
     Start a build slave and connect it to the specified master node.
 
   ENVIRONMENT:
-    PAPRIKA_MASTER_URL
-    PAPRIKA_MASTER_TOKEN
-    PAPRIKA_SLAVE_IDENTITY
-    PAPRIKA_SLAVE_LABELS
-    PAPRIKA_SLAVE_WORKSPACE
+    CIDER_MASTER_URL
+    CIDER_MASTER_TOKEN
+    CIDER_SLAVE_IDENTITY
+    CIDER_SLAVE_LABELS
+    CIDER_SLAVE_WORKSPACE
 	`,
 	Action: enslaveThisPoorMachine,
 }
@@ -84,11 +84,11 @@ func enslaveThisPoorMachine(cmd *gocli.Command, args []string) {
 	}
 
 	// Read the environment to fill in missing parameters.
-	utils.GetenvOrFailNow(&master, "PAPRIKA_MASTER_URL", cmd)
-	utils.GetenvOrFailNow(&token, "PAPRIKA_MASTER_TOKEN", cmd)
-	utils.GetenvOrFailNow(&identity, "PAPRIKA_SLAVE_IDENTITY", cmd)
-	utils.Getenv(&labels, "PAPRIKA_SLAVE_LABELS")
-	utils.GetenvOrFailNow(&workspace, "PAPRIKA_SLAVE_WORKSPACE", cmd)
+	utils.GetenvOrFailNow(&master, "CIDER_MASTER_URL", cmd)
+	utils.GetenvOrFailNow(&token, "CIDER_MASTER_TOKEN", cmd)
+	utils.GetenvOrFailNow(&identity, "CIDER_SLAVE_IDENTITY", cmd)
+	utils.Getenv(&labels, "CIDER_SLAVE_LABELS")
+	utils.GetenvOrFailNow(&workspace, "CIDER_SLAVE_WORKSPACE", cmd)
 
 	// Set up logging.
 	var (

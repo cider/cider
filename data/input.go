@@ -1,19 +1,19 @@
 // Copyright (c) 2014 The AUTHORS
 //
-// This file is part of paprika.
+// This file is part of cider.
 //
-// paprika is free software: you can redistribute it and/or modify
+// cider is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// paprika is distributed in the hope that it will be useful,
+// cider is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with paprika.  If not, see <http://www.gnu.org/licenses/>.
+// along with cider.  If not, see <http://www.gnu.org/licenses/>.
 
 package data
 
@@ -43,7 +43,7 @@ func ParseArgs(slave, repository, script, runner string, env []string) (method s
 	}
 
 	// RPC method name
-	method = fmt.Sprintf("paprika.%v.%v", slave, runner)
+	method = fmt.Sprintf("cider.%v.%v", slave, runner)
 
 	// RPC arguments
 	args = &BuildArgs{

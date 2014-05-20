@@ -15,10 +15,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/paprikaci/paprika/build"
-	"github.com/paprikaci/paprika/data"
-	"github.com/paprikaci/paprika/master"
-	"github.com/paprikaci/paprika/slave"
+	"github.com/cider/cider/build"
+	"github.com/cider/cider/data"
+	"github.com/cider/cider/master"
+	"github.com/cider/cider/slave"
 
 	"github.com/cihub/seelog"
 	"github.com/garyburd/redigo/redis"
@@ -72,7 +72,7 @@ func main() {
 }
 
 func benchmark(b *testing.B) {
-	const prefix = "paprika-benchmark"
+	const prefix = "cider-benchmark"
 
 	log.Printf("Starting a benchmark round, N=%v\n", b.N)
 
@@ -147,7 +147,7 @@ func benchmark(b *testing.B) {
 				Repository: repositoryBaseURL + "#b" + strconv.Itoa(index),
 				Script:     "build.sh",
 			}
-			req := client.NewBuildRequest("paprika.any.bash", args)
+			req := client.NewBuildRequest("cider.any.bash", args)
 			req.Stderr = os.Stderr
 
 			var stdout io.Writer
@@ -155,7 +155,7 @@ func benchmark(b *testing.B) {
 			case modeNoop:
 				args.Noop = true
 			case modeStreaming:
-				// This makes Paprika stream the output, but then it is discarded
+				// This makes Cider stream the output, but then it is discarded
 				// by the client library since the writer points to /dev/null.
 				stdout = ioutil.Discard
 			case modeRedis:

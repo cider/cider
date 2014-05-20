@@ -1,19 +1,19 @@
 // Copyright 2014 The AUTHORS
 //
-// This file is part of paprika.
+// This file is part of cider.
 //
-// paprika is free software: you can redistribute it and/or modify
+// cider is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// paprika is distributed in the hope that it will be useful,
+// cider is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with paprika.  If not, see <http://www.gnu.org/licenses/>.
+// along with cider.  If not, see <http://www.gnu.org/licenses/>.
 
 package master
 
@@ -24,9 +24,9 @@ import (
 	"time"
 
 	// Cider
-	"github.com/cider/cider/broker"
-	"github.com/cider/cider/broker/exchanges/rpc/roundrobin"
-	"github.com/cider/cider/broker/transports/websocket/rpc"
+	"github.com/meeko/meekod/broker"
+	"github.com/meeko/meekod/broker/exchanges/rpc/roundrobin"
+	"github.com/meeko/meekod/broker/transports/websocket/rpc"
 
 	// Others
 	"code.google.com/p/go.net/websocket"
@@ -36,7 +36,7 @@ const TokenHeader = "X-Cider-Token"
 
 var ErrInvalidToken = errors.New("Invalid access token")
 
-// BuildMaster represents a Paprika CI master node that serves as the hub where
+// BuildMaster represents a Cider CI master node that serves as the hub where
 // all the build slaves and build clients exchange data between each other.
 type BuildMaster struct {
 	address   string

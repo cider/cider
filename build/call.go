@@ -1,19 +1,19 @@
 // Copyright (c) 2014 The AUTHORS
 //
-// This file is part of paprika.
+// This file is part of cider.
 //
-// paprika is free software: you can redistribute it and/or modify
+// cider is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// paprika is distributed in the hope that it will be useful,
+// cider is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with paprika.  If not, see <http://www.gnu.org/licenses/>.
+// along with cider.  If not, see <http://www.gnu.org/licenses/>.
 
 package build
 
@@ -25,19 +25,19 @@ import (
 	"os"
 	"os/signal"
 
-	// Paprika
-	"github.com/paprikaci/paprika/data"
-
 	// Cider
-	"github.com/cider/go-cider/cider/services/rpc"
-	ws "github.com/cider/go-cider/cider/transports/websocket/rpc"
+	"github.com/cider/cider/data"
+
+	// Meeko
+	"github.com/meeko/go-meeko/meeko/services/rpc"
+	ws "github.com/meeko/go-meeko/meeko/transports/websocket/rpc"
 
 	// Others
 	"code.google.com/p/go.net/websocket"
 	"github.com/wsxiaoys/terminal/color"
 )
 
-const TokenHeader = "X-Cider-Token"
+const TokenHeader = "X-Meeko-Token"
 
 type Session struct {
 	*rpc.Service
@@ -51,7 +51,7 @@ func Dial(master, token string) (*Session, error) {
 		factory.WSConfigFunc = func(config *websocket.Config) {
 			config.Header.Set(TokenHeader, token)
 		}
-		return factory.NewTransport("paprika#" + mustRandomString())
+		return factory.NewTransport("cider#" + mustRandomString())
 	})
 	if err != nil {
 		return nil, err

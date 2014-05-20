@@ -1,19 +1,19 @@
 // Copyright (c) 2014 The AUTHORS
 //
-// This file is part of paprika.
+// This file is part of cider.
 //
-// paprika is free software: you can redistribute it and/or modify
+// cider is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// paprika is distributed in the hope that it will be useful,
+// cider is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with paprika.  If not, see <http://www.gnu.org/licenses/>.
+// along with cider.  If not, see <http://www.gnu.org/licenses/>.
 
 package slave
 
@@ -24,14 +24,14 @@ import (
 	"os"
 	"time"
 
-	// Paprika
-	"github.com/paprikaci/paprika/data"
-	"github.com/paprikaci/paprika/slave/runners"
-
 	// Cider
-	"github.com/cider/cider/apps/utils/executil"
-	"github.com/cider/cider/apps/utils/vcsutil"
-	"github.com/cider/go-cider/cider/services/rpc"
+	"github.com/cider/cider/data"
+	"github.com/cider/cider/slave/runners"
+
+	// Meeko
+	"github.com/meeko/go-meeko/meeko/services/rpc"
+	"github.com/meeko/meekod/supervisor/utils/executil"
+	"github.com/meeko/meekod/supervisor/utils/vcsutil"
 )
 
 type Builder struct {
