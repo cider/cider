@@ -18,7 +18,7 @@ hosted CI server, but the task itself is executed on your own build slave.
 
 To see how a Cider-compatible project repository looks like and how the output
 is streamed back to the console, check the
-[demo repository](https://github.com/ciderci/cider-example).
+[demo repository](https://github.com/cider/cider-example).
 
 ## cider Command
 
@@ -37,7 +37,7 @@ and run `cider slave` there. See the subcommands help for more details.
 
 ## Cider Internals ##
 
-Cider uses [Cider](https://github.com/cider) RPC framework. Cider itself is
+Cider uses [Meeko](http://meeko.io) RPC framework. Cider itself is
 then rather simple. Cider master is a Cider RPC broker, the slaves are Cider
 RPC clients which register certain RPC methods. `cider build` then generates
 proper RPC method name and arguments, connects to the Cider broker and calls
@@ -59,7 +59,7 @@ thing to do is to run `cider -h` and see what is printed.
 
 ## Example ##
 
-See the [demo repository](https://github.com/ciderci/cider-example).
+See the [demo repository](https://github.com/cider/cider-example).
 
 ## Benchmarks ##
 
@@ -71,4 +71,4 @@ You can join the [mailing list](https://groups.google.com/forum/#!forum/ciderci)
 
 ## License ##
 
-GNU GPLv3, see the `LICENSE` file.
+MIT, see the `LICENSE` file.
