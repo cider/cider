@@ -91,6 +91,10 @@ func NewFromConfigAsFile(path string, opts *Options) (*Daemon, error) {
 		return nil, err
 	}
 
+	if err := config.PopulateEnviron(); err != nil {
+		return nil, err
+	}
+
 	return NewFromConfig(config, opts)
 }
 
@@ -98,6 +102,7 @@ func newDaemon(config *Config, opts *Options) *Daemon {
 	return &Daemon{
 		config:    config,
 		opts:      opts,
+		broker:    broker.New(),
 		termCh:    make(chan struct{}),
 		termAckCh: make(chan struct{}),
 	}
@@ -108,11 +113,23 @@ func (daemon *Daemon) Monitor(monitorCh chan<- *broker.EndpointCrashReport) {
 }
 
 func (daemon *Daemon) Serve() error {
-	var config = daemon.config
+	select {
+	case <-daemon.termCh:
+		return ErrTerminated
+	default:
+	}
+
+	defer func() {
+		close(daemon.termAckCh)
+	}()
+
+	var (
+		config = daemon.config
+		brookr = daemon.broker
+	)
 
 	// Prepare the service exchanges.
 	var (
-		brookr   = broker.New()
 		logger   = publisher.New()
 		pubsub   = eventbus.New()
 		balancer = roundrobin.NewBalancer()
@@ -189,7 +206,6 @@ func (daemon *Daemon) Serve() error {
 		// Start the supervisor.
 		supImpl, err := exec.NewSupervisor(config.Supervisor.Workspace)
 		if err != nil {
-			daemon.Terminate()
 			return err
 		}
 		// TODO: This is a weird method name and anyway, do we need it?
@@ -203,19 +219,27 @@ func (daemon *Daemon) Serve() error {
 			config.Supervisor.Token,
 			logger)
 		if err != nil {
-			daemon.Terminate()
 			return err
 		}
 		// Export Meeko management calls.
 		if err := sup.ExportManagementMethods(inprocClient); err != nil {
-			sup.Terminate()
-			daemon.Terminate()
 			return err
 		}
 	}
 
 	// Start the service endpoints.
 	brookr.ListenAndServe()
+	go func() {
+		select {
+		case <-brookr.Terminated():
+			select {
+			case <-daemon.termCh:
+			default:
+				close(daemon.termCh)
+			}
+		case <-daemon.termCh:
+		}
+	}()
 
 	// Wait for the termination signal, then terminate everything.
 	<-daemon.termCh
@@ -223,7 +247,6 @@ func (daemon *Daemon) Serve() error {
 		sup.Terminate()
 	}
 	brookr.Terminate()
-	close(daemon.termAckCh)
 	return nil
 }
 
