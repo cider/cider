@@ -121,6 +121,3 @@ The communication framework itself imposes very little overhead compared to what
 it takes to actually clone the repository and run the build script. In real
 deployment Cider would much faster run out of network bandwidth or the
 database where the builds output is being saved would become a bottleneck.
-
-Running the benchmark using **4 threads instead of 1** makes the system able to run
-up to **2 times more builds** per second.
