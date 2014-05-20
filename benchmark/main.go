@@ -18,12 +18,14 @@ import (
 	"strconv"
 	"sync"
 	"testing"
+	"text/template"
 	"time"
 
 	"github.com/cider/cider/build"
 	"github.com/cider/cider/data"
-	"github.com/cider/cider/master"
 	"github.com/cider/cider/slave"
+
+	"github.com/meeko/meekod/daemon"
 
 	"github.com/cihub/seelog"
 	"github.com/garyburd/redigo/redis"
@@ -114,17 +116,20 @@ func benchmark(b *testing.B) {
 	defer nuke(workspace)
 
 	// Run the build master.
-	buildMaster := master.New(listenAddress, token)
-	buildMaster.Listen()
+	buildMaster, err := newMaster(listenAddress, token)
+	if err != nil {
+		log.Fatal(err)
+	}
+	go buildMaster.Serve()
 	defer buildMaster.Terminate()
+	time.Sleep(500 * time.Millisecond)
 
 	// Run the build slave.
 	buildSlave := slave.New("Pepa", workspace, uint(runtime.NumCPU()))
 	go buildSlave.Connect(connectAddress, token)
 	defer buildSlave.Terminate()
+	time.Sleep(500 * time.Millisecond)
 
-	// Wait a bit for the things to bind.
-	time.Sleep(time.Second)
 	// Check for errors here already, just in case.
 	select {
 	case <-buildMaster.Terminated():
@@ -268,4 +273,33 @@ func writeBuildScript(path string) error {
 		return err
 	}
 	return nil
+}
+
+func newMaster(address, token string) (*daemon.Daemon, error) {
+	config := `
+broker:
+  endpoints:
+    rpc:
+      websocket:
+        address: "{{.Address}}"
+        token:   "{{.Token}}"
+`
+
+	ctx := struct {
+		Address string
+		Token   string
+	}{
+		address,
+		token,
+	}
+	var out bytes.Buffer
+	err := template.Must(template.New("config").Parse(config)).Execute(&out, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return daemon.NewFromConfigAsBytes(out.Bytes(), &daemon.Options{
+		DisableSupervisor:     true,
+		DisableLocalEndpoints: true,
+	})
 }
