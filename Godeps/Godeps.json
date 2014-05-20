@@ -41,15 +41,15 @@
 		},
 		{
 			"ImportPath": "github.com/meeko/meekod/broker",
-			"Rev": "e6b624b312d3141fcd97b2dbe011b6b6a00dc9e5"
+			"Rev": "1012d82012b8d9a73898262c02623bb44bd7247c"
 		},
 		{
 			"ImportPath": "github.com/meeko/meekod/daemon",
-			"Rev": "e6b624b312d3141fcd97b2dbe011b6b6a00dc9e5"
+			"Rev": "1012d82012b8d9a73898262c02623bb44bd7247c"
 		},
 		{
 			"ImportPath": "github.com/meeko/meekod/supervisor",
-			"Rev": "e6b624b312d3141fcd97b2dbe011b6b6a00dc9e5"
+			"Rev": "1012d82012b8d9a73898262c02623bb44bd7247c"
 		},
 		{
 			"ImportPath": "github.com/pebbe/zmq3",

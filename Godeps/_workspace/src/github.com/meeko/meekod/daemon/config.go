@@ -165,12 +165,20 @@ func ReadConfigFile(path string) (*Config, error) {
 		return nil, err
 	}
 
-	config := new(Config)
-	if err := yaml.Unmarshal(content, config); err != nil {
+	config, err := parseConfig(content)
+	if err != nil {
 		return nil, err
 	}
 
 	if err := config.ensureCommonConfig(); err != nil {
+		return nil, err
+	}
+	return config, nil
+}
+
+func parseConfig(content []byte) (*Config, error) {
+	config := new(Config)
+	if err := yaml.Unmarshal(content, config); err != nil {
 		return nil, err
 	}
 	return config, nil

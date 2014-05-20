@@ -57,6 +57,7 @@ type Daemon struct {
 	broker    *broker.Broker
 	termCh    chan struct{}
 	termAckCh chan struct{}
+	err       error
 }
 
 func NewFromConfig(config *Config, opts *Options) (*Daemon, error) {
@@ -78,7 +79,24 @@ func NewFromConfig(config *Config, opts *Options) (*Daemon, error) {
 		}
 	}
 
+	if err := config.PopulateEnviron(); err != nil {
+		return nil, err
+	}
+
 	return newDaemon(config, opts), nil
+}
+
+func NewFromConfigAsBytes(configBytes []byte, opts *Options) (*Daemon, error) {
+	if len(configBytes) == 0 {
+		return nil, errors.New("meekod configuration string is empty")
+	}
+
+	config, err := parseConfig(configBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewFromConfig(config, opts)
 }
 
 func NewFromConfigAsFile(path string, opts *Options) (*Daemon, error) {
@@ -88,10 +106,6 @@ func NewFromConfigAsFile(path string, opts *Options) (*Daemon, error) {
 
 	config, err := ReadConfigFile(path)
 	if err != nil {
-		return nil, err
-	}
-
-	if err := config.PopulateEnviron(); err != nil {
 		return nil, err
 	}
 
@@ -112,7 +126,7 @@ func (daemon *Daemon) Monitor(monitorCh chan<- *broker.EndpointCrashReport) {
 	daemon.broker.Monitor(monitorCh)
 }
 
-func (daemon *Daemon) Serve() error {
+func (daemon *Daemon) Serve() (err error) {
 	select {
 	case <-daemon.termCh:
 		return ErrTerminated
@@ -120,6 +134,7 @@ func (daemon *Daemon) Serve() error {
 	}
 
 	defer func() {
+		daemon.err = err
 		close(daemon.termAckCh)
 	}()
 
@@ -136,10 +151,7 @@ func (daemon *Daemon) Serve() error {
 	)
 
 	// Register a special inproc service endpoint.
-	var (
-		inprocClient *rpc_client.Service
-		err          error
-	)
+	var inprocClient *rpc_client.Service
 	if !daemon.opts.DisableSupervisor {
 		transport := rpc_inproc.NewTransport("Meeko", balancer)
 		inprocClient, err = rpc_client.NewService(func() (rpc_client.Transport, error) {
@@ -277,4 +289,11 @@ func (daemon *Daemon) TerminateZmq() error {
 // Terminated returns a channel that is closed when the daemon is terminated.
 func (daemon *Daemon) Terminated() <-chan struct{} {
 	return daemon.termAckCh
+}
+
+// Wait blocks until the daemon is terminated, then it returns the same return
+// value that Serve returned.
+func (daemon *Daemon) Wait() error {
+	<-daemon.Terminated()
+	return daemon.err
 }
