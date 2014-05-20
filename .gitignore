@@ -22,4 +22,4 @@ _testmain.go
 *.exe
 
 # Added manually
-paprika
+cider
