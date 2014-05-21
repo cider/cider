@@ -1,0 +1,8 @@
+master:   "wss://cider.example.com:443"
+token:    "secret"
+identity: "foobar"
+labels:
+  - "linux"
+  - "linux-debian"
+workspace: "/var/lib/cider-slave"
+executors: 2
