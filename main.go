@@ -9,7 +9,6 @@ import (
 	"os"
 
 	"github.com/cider/cider/build"
-//	"github.com/cider/cider/master"
 	"github.com/cider/cider/slave"
 
 	"github.com/tchap/gocli"
@@ -39,7 +38,6 @@ func main() {
   To understand more about how Cider works, check the available subcommands.`
 
 	cider.MustRegisterSubcommand(build.Command)
-//	cider.MustRegisterSubcommand(master.Command)
 	cider.MustRegisterSubcommand(slave.Command)
 
 	cider.Run(os.Args[1:])
