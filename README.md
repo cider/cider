@@ -1,65 +1,84 @@
-# Cider CI Server Extender #
+# Cider
 
-There are many cool Continuous Integration hosted services, like Travis CI,
-Circle CI, Drone.io and many others. The problem is that these services mostly
-support Linux builds only since that is the easiest thing to implement. The
-reality is unfortunately not that beautiful and often there is a need for
-Windows or Mac OS X builds.
+Cider is a framework for implementing continuous integration servers.
 
-Since [we](https://www.salsitasoft.com) really liked these hosted services, and
-we also needed Windows and Mac OS X builds, we decided to create **Cider**,
-which is something that could be called a CI server *extender*. The idea is simple.
-You use your favourite hosted CI server, but in case you need a build environment
-that is not supported, you use a command line utility to connect to another
-CI system with its own set of build slaves. You trigger a build there, the
-output is being steamed to the console and the output itself is saved in the
-hosted CI server that you use. In other words, the build job is trigger in the
-hosted CI server, but the task itself is executed on your own build slave.
+## Overview
 
-To see how a Cider-compatible project repository looks like and how the output
-is streamed back to the console, check the
-[demo repository](https://github.com/cider/cider-example).
+Cider is a set of [Meeko](http://meeko.io) agents that can be used to implement
+a simple continuous integration (CI) server.
 
-## cider Command
+Cider itself contains:
 
-`cider` executable implements the whole Cider CI server functionality. The
-functionality is split into subcommands:
+* the build slave agent, and
+* the build trigger agent.
 
-* `cider master` starts a master node.
-* `cider slave` starts a slave node.
-* `cider build` connects to the chosen master node and triggers a build.
+Meeko itself acts as the build master component.
 
-Right now Cider works in a single master multiple slaves manner, so to start
-using Cider, a master node must be run somewhere using `cider master`. Once
-a master node is running, `cider slave` can be used to spawn build slaves. All
-that is necessary is to go to the machines that are to be used as build slaves
-and run `cider slave` there. See the subcommands help for more details.
+Right now there is no component that handles the build output, this must be implemented in
+some other agent. This is actually not that critical as it may seem, check the Tips and Tricks
+section.
 
-## Cider Internals ##
+### The Build Slave Agent
 
-Cider uses [Meeko](http://meeko.io) RPC framework. Cider itself is
-then rather simple. Cider master is a Cider RPC broker, the slaves are Cider
-RPC clients which register certain RPC methods. `cider build` then generates
-proper RPC method name and arguments, connects to the Cider broker and calls
-the relevant method. The output steaming is actually implemented in Cider,
-Cider gets this functionality for free.
+The first and the most important component that is included is the build slave agent.
+It exports certain methods over the Meeko RPC service. These methods can be then called
+by other agents to trigger builds on the relevant build slaves.
 
-### Build Request Routing ###
+Every build slave is associated with a set of labels and a set of runners. The labels are
+just some user-defined strings that represent the environment of the build slave. It can be
+e.g. `linux-ubuntu-14.04` or `macosx-10.9`. The set of runners is generated when the slave
+is started and it describes what script executors are available on the target system.
+The available runners are:
 
-You might be wondering how the RPC requests are routed to the build slaves. It
-is rather simple. The RPC method name is generated from the specified slave
-label and the script runner to be used. It looks like `cider.SLAVE.RUNNER`.
-All that is required from the particular Cider instance is that there is a
-build slave connected, having SLAVE label assigned and being able to run RUNNER.
+* `bash` - bash
+* `node` - node
+* `powershell` - PowerShell.exe
+* `cmd` - cmd.exe
 
-## Documentation ##
+The slave automatically activates the runners that can be found in `PATH`.
 
-The help output of the `cider` command itself is rather verbose, so the best
-thing to do is to run `cider -h` and see what is printed.
+Once the labels and runners are known, the build slave connects to the Meeko RPC service
+and it exports methods schematically looking like `cider.LABEL.RUNNER`. The slave just
+does a Cartesian product, so the number of methods exported is `|labels| * |runners|`.
+
+Certain information must be supplied as the method arguments:
+
+| Name            | Type       | Description                                                    |
+| --------------- |:----------:| -------------------------------------------------------------- |
+| `repository`    | `string`   | Meeko-compatible repository URL                                |
+| `script`        | `string`   | the relative path of the script to be executed                 |
+| `env`           | `[]string` | the list of environment variables to be defined for the script |
+
+The build slave then clones/pulls the specified repository and uses the relevant runner to run
+the specified script. The variables defined in `env` are exported for the build script.
+The build output is being streamed back to the requested using the RPC service. Once the build
+is finished, the following value is returned
+
+| Name            | Type            | Description                       |
+| --------------- |:---------------:| --------------------------------- |
+| `pullDuration`  | `time.Duration` | time spent pulling the repository |
+| `buildDuration` | `time.Duration` | time spent running the script     |
+| `error`         | `string`        | error message, if any             |
+
+The return code is `0` on success, `1` on failure.
+
+### The Build Trigger Agent
+
+The second agent, available as `cider build` subcommand, can be used to trigger builds remotely.
+The usage is explained in the [example repository](https://github.com/cider/cider-example).
+
+## Installation ##
+
+You will need [Go](http://golang.org) 1.1 or higher.
+
+## Usage ##
+
+The help output of the `cider` command is rather verbose, so the best
+thing to do is to run `cider -h`.
 
 ## Example ##
 
-See the [demo repository](https://github.com/cider/cider-example).
+See the [example repository](https://github.com/cider/cider-example).
 
 ## Benchmarks ##
 
@@ -69,6 +88,26 @@ See the `benchmark` subdirectory for more details.
 
 You can join the [mailing list](https://groups.google.com/forum/#!forum/ciderci).
 
+## Tips and Tricks ##
+
+Cider can be used to simply add build slaves to some existing CI server. All that is necessary
+is to run `cider build` from within the other CI server. That will stream the build output to
+the console and the other CI server will take care of saving of the build output. This is very
+handy in case you fancy certain CI server solution, but you need a build slave environment that
+is not supported. This happens quite often with the hosted CI solutions. Usually only Linux build
+slaves are supported.
+
+## Contributing ##
+
+See `CONTRIBUTING.md`.
+
 ## License ##
 
 MIT, see the `LICENSE` file.
+
+## About the Original Authors ##
+
+[tchap](https://github.com/tchap) started with this project because he was too fed up with other
+continuous integration servers.
+
+Cider is going to be used at [Salsita](https://github.com/salsita).
