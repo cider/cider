@@ -94,7 +94,7 @@ This is very very much still in development, use at your own risk.
 
 ## Tips and Tricks ##
 
-Cider can be used to simply add build slaves to some existing CI server. All that is necessary
+Cider can be used to simply add build slaves to other CI servers. All that is necessary
 is to run `cider build` from within the other CI server. That will stream the build output to
 the console and the other CI server will take care of saving of the build output. This is very
 handy in case you fancy certain CI server solution, but you need a build slave environment that
