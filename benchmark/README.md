@@ -120,4 +120,4 @@ In other words, **15 builds/s** (65 ms/build).
 The communication framework itself imposes very little overhead compared to what
 it takes to actually clone the repository and run the build script. In real
 deployment Cider would much faster run out of network bandwidth or the
-database where the builds output is being saved would become a bottleneck.
+database where the build output is being saved would become a bottleneck.
