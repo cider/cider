@@ -580,7 +580,13 @@ func (sup *Supervisor) agentStagingDir(alias string) string {
 func (sup *Supervisor) agentSrcDir(agent *data.Agent) string {
 	mustHaveAlias(agent)
 	mustHaveName(agent)
-	return filepath.Join(sup.agentDir(agent.Alias), "src", agent.Name)
+	var suffix string
+	if agent.CloneDir == "" {
+		suffix = agent.Name
+	} else {
+		suffix = agent.CloneDir
+	}
+	return filepath.Join(sup.agentDir(agent.Alias), "src", suffix)
 }
 
 func (sup *Supervisor) agentBinDir(agent *data.Agent) string {

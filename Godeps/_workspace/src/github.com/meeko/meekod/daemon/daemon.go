@@ -205,6 +205,8 @@ func (daemon *Daemon) Serve() (err error) {
 		token := config.Broker.Endpoints.RPC.WebSocket.Token
 		cfg.WSHandshake = func(cfg *ws.Config, req *http.Request) error {
 			if req.Header.Get("X-Meeko-Token") != token {
+				log.Warnf("Agent %v did not supply a valid websocket access token",
+					req.Header.Get(wsrpc.IdentityHeader))
 				return errors.New("Invalid access token")
 			}
 			return nil

@@ -1,19 +1,19 @@
 {
 	"ImportPath": "github.com/cider/cider",
-	"GoVersion": "go1.2.2",
+	"GoVersion": "go1.3",
 	"Packages": [
 		"./..."
 	],
 	"Deps": [
 		{
 			"ImportPath": "code.google.com/p/go.net/websocket",
-			"Comment": "null-128",
-			"Rev": "9c33002573cb03309e20978369b0536f4f00b24d"
+			"Comment": "null-136",
+			"Rev": "28ff664507e453c4455b8c65e701bbe2b2ac980d"
 		},
 		{
 			"ImportPath": "github.com/cihub/seelog",
-			"Comment": "go1.1-11-g2b0831a",
-			"Rev": "2b0831a55e91f154f464c9d416ec814b100cf71a"
+			"Comment": "go1.1-24-g83d0dca",
+			"Rev": "83d0dcad636b63c066856045962befa246e00c79"
 		},
 		{
 			"ImportPath": "github.com/dmotylev/nutrition",
@@ -21,39 +21,39 @@
 		},
 		{
 			"ImportPath": "github.com/garyburd/redigo/redis",
-			"Rev": "1856a87f5528bfd8caea03f69a69d8443bc432ed"
+			"Rev": "1c7841955920910958c71b1cc1a03f628267d468"
 		},
 		{
 			"ImportPath": "github.com/meeko/go-meeko/meeko/services",
-			"Rev": "cc3771093cd973f26d1b7e53b01605da035055f0"
+			"Rev": "537b6f5c309580c9971091d36ee0bbc6cbb416cf"
 		},
 		{
 			"ImportPath": "github.com/meeko/go-meeko/meeko/transports/inproc/rpc",
-			"Rev": "cc3771093cd973f26d1b7e53b01605da035055f0"
+			"Rev": "537b6f5c309580c9971091d36ee0bbc6cbb416cf"
 		},
 		{
 			"ImportPath": "github.com/meeko/go-meeko/meeko/transports/websocket/rpc",
-			"Rev": "cc3771093cd973f26d1b7e53b01605da035055f0"
+			"Rev": "537b6f5c309580c9971091d36ee0bbc6cbb416cf"
 		},
 		{
 			"ImportPath": "github.com/meeko/go-meeko/meeko/utils/codecs",
-			"Rev": "cc3771093cd973f26d1b7e53b01605da035055f0"
+			"Rev": "537b6f5c309580c9971091d36ee0bbc6cbb416cf"
 		},
 		{
 			"ImportPath": "github.com/meeko/meekod/broker",
-			"Rev": "1012d82012b8d9a73898262c02623bb44bd7247c"
+			"Rev": "6b9783e90b50dfe1506b12aa35446c8bf71522ab"
 		},
 		{
 			"ImportPath": "github.com/meeko/meekod/daemon",
-			"Rev": "1012d82012b8d9a73898262c02623bb44bd7247c"
+			"Rev": "6b9783e90b50dfe1506b12aa35446c8bf71522ab"
 		},
 		{
 			"ImportPath": "github.com/meeko/meekod/supervisor",
-			"Rev": "1012d82012b8d9a73898262c02623bb44bd7247c"
+			"Rev": "6b9783e90b50dfe1506b12aa35446c8bf71522ab"
 		},
 		{
 			"ImportPath": "github.com/pebbe/zmq3",
-			"Rev": "864ffc49d2e319fbaec3d0b3290b34241c1653b1"
+			"Rev": "5828282ee2f245c309aa6f03a287f5713d4cde7b"
 		},
 		{
 			"ImportPath": "github.com/tchap/go-exchange/exchange",
@@ -86,7 +86,7 @@
 		},
 		{
 			"ImportPath": "labix.org/v2/mgo",
-			"Comment": "275",
+			"Comment": "282",
 			"Rev": "gustavo@niemeyer.net-20140501184651-975yyw9ipld92pji"
 		}
 	]

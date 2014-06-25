@@ -15,15 +15,16 @@ import (
 )
 
 type Agent struct {
-	Id          bson.ObjectId `bson:"_id"            codec:"-"`
-	Alias       string        `bson:"alias"          codec:"alias"`
-	Name        string        `bson:"name"           codec:"name,omitempty"`
-	Version     string        `bson:"version"        codec:"version,omitempty"`
-	Description string        `bson:"description"    codec:"description,omitempty"`
-	Repository  string        `bson:"repository"     codec:"repository,omitempty"`
-	Vars        Variables     `bson:"vars,omitempty" codec:"vars,omitempty"        json:"variables"`
-	Enabled     bool          `bson:"enabled"        codec:"enabled,omitempty"`
-	Status      string        `bson:"-"              codec:"status,omitempty"`
+	Id          bson.ObjectId `bson:"_id"                 codec:"-"`
+	Alias       string        `bson:"alias"               codec:"alias"`
+	Name        string        `bson:"name"                codec:"name,omitempty"`
+	Version     string        `bson:"version"             codec:"version,omitempty"`
+	Description string        `bson:"description"         codec:"description,omitempty"`
+	Repository  string        `bson:"repository"          codec:"repository,omitempty"`
+	CloneDir    string        `bson:"clone_dir,omitempty" codec:"clone_dir,omitempty"   json:"clone_dir"`
+	Vars        Variables     `bson:"vars,omitempty"      codec:"vars,omitempty"        json:"variables"`
+	Enabled     bool          `bson:"enabled"             codec:"enabled,omitempty"`
+	Status      string        `bson:"-"                   codec:"status,omitempty"`
 }
 
 func (agent *Agent) FillAndValidate() error {
