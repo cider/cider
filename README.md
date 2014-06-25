@@ -88,6 +88,10 @@ See the `benchmark` subdirectory for more details.
 
 You can join the [mailing list](https://groups.google.com/forum/#!forum/ciderci).
 
+## Status ##
+
+This is very very much still in development, use at your own risk.
+
 ## Tips and Tricks ##
 
 Cider can be used to simply add build slaves to some existing CI server. All that is necessary
